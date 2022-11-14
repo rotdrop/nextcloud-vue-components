@@ -97,10 +97,10 @@ export default {
     console.info('VALUE' , this.value)
     this.fileInfo = this.value
     if (!this.fileInfo.baseName && this.baseName) {
-      Vue.set(this.fileInfo, baseName, this.baseName)
+      Vue.set(this.fileInfo, 'baseName', this.baseName)
     }
     if (!this.fileInfo.dirName && this.dirName) {
-      Vue.set(this.fileInfo, dirName, this.dirName)
+      Vue.set(this.fileInfo, 'dirName', this.dirName)
     }
   },
   computed: {
@@ -130,7 +130,7 @@ export default {
         showError(t(appName, 'Invalid path selected: "{dir}".', { dir }), { timeout: TOAST_PERMANENT_TIMEOUT })
       } else  {
         showInfo(t(appName, 'Selected path: "{dir}/{base}/".', { dir, base: this.fileInfo.baseName }))
-        Vue.set(this.fileInfo, dirName, dirName)
+        Vue.set(this.fileInfo, 'dirName', dir)
       }
     },
   },

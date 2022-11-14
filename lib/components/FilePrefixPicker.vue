@@ -29,14 +29,14 @@
            class="file-picker button"
            @click="openFilePicker(...arguments)"
         >
-          {{ fileInfo.dirName + (fileInfo.dirName !== '/' ? '/' : '') }}
+          {{ pathInfo.dirName + (pathInfo.dirName !== '/' ? '/' : '') }}
         </a>
       </div>
-      <SettingsInputText v-model="fileInfo.baseName"
+      <SettingsInputText v-model="pathInfo.baseName"
                          label=""
                          class="flex-grow"
                          :placeholder="placeholder"
-                         @update="$emit('update', fileInfo)"
+                         @update="$emit('update', pathInfo)"
       />
     </div>
   </div>
@@ -91,17 +91,19 @@ export default {
   },
   data() {
     return {
-      pathInfo: null,
+      pathInfo: {
+        dirName: null,
+        baseName: null,
+      },
     }
   },
   created() {
-    console.info('VALUE' , this.value)
-    this.fileInfo = this.value
-    if (!this.fileInfo.baseName && this.baseName) {
-      Vue.set(this.fileInfo, 'baseName', this.baseName)
+    this.pathInfo = this.value
+    if (!this.pathInfo.baseName && this.baseName) {
+      Vue.set(this.pathInfo, 'baseName', this.baseName)
     }
-    if (!this.fileInfo.dirName && this.dirName) {
-      Vue.set(this.fileInfo, 'dirName', this.dirName)
+    if (!this.pathInfo.dirName && this.dirName) {
+      Vue.set(this.pathInfo, 'dirName', this.dirName)
     }
   },
   computed: {
@@ -110,15 +112,14 @@ export default {
     }
   },
   watch: {
-    fileInfo(newValue) {
-      this.$emit('input', newValue) // Vue 2
-      // this.$emit('update:modelValue', newValue) // Vue 3
+    pathName(newValue, oldValue) {
+      this.$emit('input', this.pathInfo) // Vue 2
     },
   },
   methods: {
     async openFilePicker() {
       const picker = getFilePickerBuilder(this.filePickerTitle)
-        .startAt(this.fileInfo.dirName)
+        .startAt(this.pathInfo.dirName)
         .setMultiSelect(false)
         .setModal(true)
         .setType(1)
@@ -128,12 +129,12 @@ export default {
 
       const dir = await picker.pick() || '/'
       if (!dir.startsWith('/')) {
-        $this.$emit('error:invalidDirName', dir)
         // showError(t(appName, 'Invalid path selected: "{dir}".', { dir }), { timeout: TOAST_PERMANENT_TIMEOUT })
+        $this.$emit('error:invalidDirName', dir)
       } else  {
+        // showInfo(t(appName, 'Selected path: "{dir}/{base}/".', { dir, base: this.pathInfo.baseName }))
         this.$emit('update:dirName', dir)
-        // showInfo(t(appName, 'Selected path: "{dir}/{base}/".', { dir, base: this.fileInfo.baseName }))
-        Vue.set(this.fileInfo, 'dirName', dir)
+        Vue.set(this.pathInfo, 'dirName', dir)
       }
     },
   },

@@ -85,7 +85,8 @@ export default {
     },
     filePickerTitle: {
       type: String,
-      default: t(appName, 'Choose a prefix-folder'),
+      // default: t(appName, 'Choose a prefix-folder'),
+      default: 'Choose a prefix-folder',
     },
   },
   data() {
@@ -127,9 +128,11 @@ export default {
 
       const dir = await picker.pick() || '/'
       if (!dir.startsWith('/')) {
-        showError(t(appName, 'Invalid path selected: "{dir}".', { dir }), { timeout: TOAST_PERMANENT_TIMEOUT })
+        $this.$emit('error:invalidDirName', dir)
+        // showError(t(appName, 'Invalid path selected: "{dir}".', { dir }), { timeout: TOAST_PERMANENT_TIMEOUT })
       } else  {
-        showInfo(t(appName, 'Selected path: "{dir}/{base}/".', { dir, base: this.fileInfo.baseName }))
+        this.$emit('update:dirName', dir)
+        // showInfo(t(appName, 'Selected path: "{dir}/{base}/".', { dir, base: this.fileInfo.baseName }))
         Vue.set(this.fileInfo, 'dirName', dir)
       }
     },

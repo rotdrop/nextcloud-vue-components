@@ -43,7 +43,7 @@
 </template>
 <script>
 
-import { appName } from '../config.js'
+// import { appName } from '../config.js'
 import Vue from 'vue'
 import { getFilePickerBuilder, showError, showInfo, TOAST_PERMANENT_TIMEOUT } from '@nextcloud/dialogs'
 import SettingsInputText from '../components/SettingsInputText'

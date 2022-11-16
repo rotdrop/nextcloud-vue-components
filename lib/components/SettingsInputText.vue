@@ -26,8 +26,9 @@
   <form @submit.prevent="">
     <div class="input-wrapper">
       <label :for="id" :class="{ empty: !label || label === '' }">{{ label }}</label>
-      <input :id="id"
-             type="text"
+      <input v-bind="$attrs"
+             :id="id"
+             :type="type"
              :value="inputVal"
              :disabled="disabled"
              :placeholder="placeholder"
@@ -40,8 +41,9 @@
              @click="$emit('update', inputVal)"
       >
     </div>
-    <p v-if="hint !== ''" class="hint">
+    <p v-if="hint !== '' || !!$slots.hint" class="hint">
       {{ hint }}
+      <slot name="hint" />
     </p>
   </form>
 </template>
@@ -51,6 +53,10 @@ let uuid = 0
 export default {
   name: 'SettingsInputText',
   props: {
+    type: {
+      type: String,
+      default: 'text',
+    },
     label: {
       type: String,
       required: true,
@@ -60,7 +66,7 @@ export default {
       default: '',
     },
     value: {
-      type: String,
+      type: [String, Number],
       default: '',
     },
     disabled: {
@@ -93,24 +99,69 @@ export default {
   },
 }
 </script>
-
-<style scoped>
-  .input-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    max-width: 400px;
-  }
+<style lang="scss" scoped>
+.input-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 400px;
 
   label:not(.empty) {
     width: 100%;
   }
 
-  input[type=text] {
+  // let the main input grow
+  label + input {
     flex-grow: 1;
+    &[type='number'] {
+      direction:rtl;
+    }
   }
 
   .hint {
     color: var(--color-text-lighter);
   }
+
+  // Fixup for Nextcloud not styling confirm after number input
+  input[type='number'] {
+    + .icon-confirm {
+      margin-left: -8px !important;
+      border-left-color: transparent !important;
+      border-radius: 0 var(--border-radius) var(--border-radius) 0 !important;
+      background-clip: padding-box;
+      /* Avoid background under border */
+      background-color: var(--color-main-background) !important;
+      opacity: 1;
+      height: 34px;
+      width: 34px;
+      padding: 7px 6px;
+      cursor: pointer;
+      margin-right: 0;
+      &:disabled {
+        cursor: default;
+        background-image: var(--icon-confirm-fade-000);
+      }
+    }
+    &:not(:active):not(:hover):not(:focus):invalid + .icon-confirm {
+      border-color: var(--color-error);
+    }
+    &:not(:active):not(:hover):not(:focus) + .icon-confirm {
+      &:active, &:hover, &:focus {
+        border-color: var(--color-primary-element) !important;
+        border-radius: var(--border-radius) !important;
+        &:disabled {
+          border-color: var(--color-background-darker) !important;
+        }
+      }
+    }
+    &:active, &:hover, &:focus {
+      + .icon-confirm {
+        border-color: var(--color-primary-element) !important;
+        border-left-color: transparent !important;
+        /* above previous input */
+        z-index: 2;
+      }
+    }
+  }
+}
 </style>

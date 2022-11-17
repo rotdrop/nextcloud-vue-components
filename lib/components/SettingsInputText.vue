@@ -32,7 +32,7 @@
              :value="inputVal"
              :disabled="disabled"
              :placeholder="placeholder"
-             @input="$emit('input', $event.target.value)"
+             @input="$emit('input', $event.target.value); inputVal = $event.target.value;"
       >
       <input type="submit"
              class="icon-confirm"
@@ -49,7 +49,6 @@
 </template>
 
 <script>
-let uuid = 0
 export default {
   name: 'SettingsInputText',
   props: {
@@ -85,17 +84,13 @@ export default {
   },
   computed: {
     id() {
-      return 'settings-input-text-' + this.uuid
+      return 'settings-input-text-' + this._uid
     },
   },
   watch: {
     value(newVal) {
       this.inputVal = this.value
     },
-  },
-  beforeCreate() {
-    this.uuid = uuid.toString()
-    uuid += 1
   },
 }
 </script>

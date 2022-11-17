@@ -127,13 +127,17 @@ export default {
         .allowDirectories()
         .build()
 
-      const dir = await picker.pick() || '/'
+      let dir = await picker.pick() || '/'
+      if (dir.startsWith('//')) { // new in Nextcloud 25?
+        dir = dir.slice(1)
+      }
+      console.info('DIR', dir)
       if (!dir.startsWith('/')) {
         // showError(t(appName, 'Invalid path selected: "{dir}".', { dir }), { timeout: TOAST_PERMANENT_TIMEOUT })
         $this.$emit('error:invalidDirName', dir)
       } else  {
         // showInfo(t(appName, 'Selected path: "{dir}/{base}/".', { dir, base: this.pathInfo.baseName }))
-        this.$emit('update:dirName', dir)
+        this.$emit('update:dirName', dir, this.pathInfo.baseName)
         Vue.set(this.pathInfo, 'dirName', dir)
       }
     },

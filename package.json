@@ -1,6 +1,6 @@
 {
   "name": "@rotdrop/nextcloud-vue-components",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A loose collection of Vue components that I use in several of my projects.",
   "main": "index.js",
   "scripts": {

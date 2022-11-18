@@ -20,15 +20,6 @@
 </script>
 <template>
   <div class="color-picker-container flex-container flex-center">
-    <ColorPicker ref="colorPicker"
-                 v-model="rgbColor"
-                 :open.sync="pickerVisible"
-                 @submit="submitCustomColor"
-                 @update:open="handleOpen"
-                 @close="() => false"
-    >
-      <button>{{ label }}</button>
-    </ColorPicker>
     <Actions>
       <ActionButton icon="icon-play"
                     @click="pickerVisible = true"
@@ -59,7 +50,20 @@
         {{ componentLabels.resetColorPalette }}
       </ActionButton>
     </Actions>
-    <input type="submit" class="icon-confirm" value="">
+    <ColorPicker ref="colorPicker"
+                 v-model="rgbColor"
+                 :open.sync="pickerVisible"
+                 @submit="submitCustomColor"
+                 @update:open="handleOpen"
+                 @close="() => false"
+    >
+      <button :style="{'background-color': rgbColor, color: rgbToGrayScale(rgbColor) > 0.5 ? 'black' : 'white'}"
+              class="trigger-button"
+      >
+        {{ label }}
+      </button>
+    </ColorPicker>
+    <input type="submit" class="icon-confirm confirm-button" value="">
   </div>
 </template>
 <script>
@@ -121,8 +125,9 @@ export default {
   },
   watch: {
     rgbColor(newValue, oldValue) {
-      console.info('COLOR UPDATE', newValue, oldValue);
-      this.$emit('input', newValue);
+      console.info('COLOR UPDATE', newValue, oldValue)
+      this.$emit('update:value', newValue)
+      this.$emit('input', newValue)
     },
   },
   created() {
@@ -161,8 +166,32 @@ export default {
         palette.pop()
         palette.splice(0, 0, this.rgbColor)
       }
-      console.info('PALETTES HERE / REF', palette, this.$refs.colorPicker.palette)
+    },
+    rgbToGrayScale(rgb) {
+      const r = Number('0x' + rgb.substring(1, 3))
+      const g = Number('0x' + rgb.substring(3, 5))
+      const b = Number('0x' + rgb.substring(5, 7))
+      return (0.3 * r + 0.59 * g + 0.11 * b) / 255.0
     },
   },
 }
 </script>
+<style scoped lang="scss">
+.color-picker-container {
+  .trigger-button {
+    margin-right:0;
+    border-top-right-radius:0;
+    border-bottom-right-radius:0;
+    &:not(:focus,:hover) {
+      border-right:0;
+    }
+  }
+  .confirm-button {
+    border-top-left-radius:0;
+    border-bottom-left-radius:0;
+    &:not(:focus,:hover) {
+      border-left:0;
+    }
+  }
+}
+</style>

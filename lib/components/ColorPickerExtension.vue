@@ -117,10 +117,10 @@ export default {
   },
   computed: {
     colorPaletteHasChanged() {
-      this.colorPickerPalette.toString() !== this.oldColorPalette.toString()
+      return this.colorPickerPalette.toString() !== this.oldColorPalette.toString()
     },
     colorPaletteIsDefault() {
-      this.colorPickerPalette.toString() === this.factoryColorPalette.toString()
+      return this.colorPickerPalette.toString() === this.factoryColorPalette.toString()
     },
   },
   watch: {
@@ -129,6 +129,12 @@ export default {
       this.$emit('update:value', newValue)
       this.$emit('input', newValue)
     },
+    colorPaletteHasChanged(newValue, oldValue) {
+      if (newValue) {
+        console.info('EMIT COLOR PALETTER CHANGED', this.colorPickerPalette)
+        this.$emit('update:color-palette', this.colorPickerPalette)
+      }
+    }
   },
   created() {
     console.info('VALUE', this.value, this.rgbColor, this.oldRgbColor)
@@ -156,8 +162,10 @@ export default {
     handleOpen() {
     },
     revertColorPalette() {
+      this.colorPickerPalette.splice(0, Infinity, ...this.oldColorPalette)
     },
     resetColorPalette() {
+      this.colorPickerPalette.splice(0, Infinity, ...this.factoryColorPalette)
     },
     prependColorToPalette(color) {
       const palette = this.colorPickerPalette

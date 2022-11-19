@@ -32,8 +32,8 @@
         {{ componentLabels.submitColorChoice }}
       </ActionButton>
       <ActionButton icon="icon-history"
-                    :disabled="rgbColor === oldRgbColor"
-                    @click="rgbColor = oldRgbColor"
+                    :disabled="savedState.rgbColor === rgbColor"
+                    @click="rgbColor = savedState.rgbColor"
       >
         {{ componentLabels.revertColor }}
       </ActionButton>
@@ -71,6 +71,7 @@
   </div>
 </template>
 <script>
+import Vue from 'vue'
 import Actions from '@nextcloud/vue/dist/Components/Actions'
 import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
 import ColorPicker from '@nextcloud/vue/dist/Components/ColorPicker'
@@ -107,24 +108,25 @@ export default {
     },
     colorPalette: {
       type: Array,
-      default: () => [],
     },
   },
   data() {
     return {
-      // rgbColor: this.value,
       pickerVisible: false,
-      oldRgbColor: this.value,
-      colorPickerPalette: this.colorPalette, // shadow of this.$refs.colorPicker.palette
-      colorPaletteHasChanged: false,
-      oldColorPalette: this.colorPalette,
-      factoryColorPalette: [],
+      factoryColorPalette: undefined,
+      savedState: {
+        rgbColor: undefined,
+        colorPickerPalette: undefined,
+      },
       loading: true,
     }
   },
   computed: {
     colorPaletteIsDefault() {
-      return this.colorPickerPalette.toString() === this.factoryColorPalette.toString()
+      return this.loading || this.colorPickerPalette.toString() === this.factoryColorPalette.toString()
+    },
+    colorPaletteHasChanged() {
+      return !this.loading && this.colorPickerPalette.toString() !== this.savedState.colorPickerPalette.toString()
     },
     /**
      * Writable computable property which updates this.value through
@@ -132,34 +134,34 @@ export default {
      */
     rgbColor: {
       set(newValue) {
-        if (!this.loading) {
-          this.$emit('update:value', newValue)
-          this.$emit('input', newValue)
+        if (this.loading) {
+          return
         }
-        return newValue
+        newValue = newValue.toLowerCase()
+        this.$emit('update:value', newValue)
+        this.$emit('input', newValue)
       },
       get() {
         return this.value
       }
     },
-  },
-  watch: {
     colorPickerPalette: {
-      handler(newValue, oldValue) {
+      set(newValue) {
+        if (this.$refs.colorPicker) {
+          this.$refs.colorPicker.palette = newValue
+        }
         if (this.loading) {
-          return
-        }
-        if (this.colorPickerPalette !== this.$refs.colorPicker.palette) {
-          this.$refs.colorPicker.palette = this.colorPickerPalette
-        }
-        if (!!newValue && !!oldValue && newValue.toString() === oldValue.toString()) {
           return
         }
         this.colorPaletteHasChanged = true
         this.$emit('update:color-palette', newValue)
       },
-      deep: true,
+      get() {
+        return this.$refs.colorPicker ? this.$refs.colorPicker.palette : undefined
+      }
     },
+  },
+  watch: {
     colorPalette(newValue, oldValue) {
       if (this.loading) {
         return
@@ -167,8 +169,8 @@ export default {
       if (!!newValue && !!oldValue && newValue.toString() === oldValue.toString()) {
         return
       }
-      if (this.colorPalette.length > 0) {
-        this.colorPickerPalette.splice(0, Infinity, ...this.colorPalette)
+      if (newValue && Array.isArray(newValue) && this.colorPickerPalette) {
+        this.colorPickerPalette.splice(0, Infinity, ...newValue)
       }
     },
   },
@@ -177,15 +179,14 @@ export default {
     // console.info('LOADING IN CREATED', this.loading)
   },
   mounted() {
-    this.factoryColorPalette = [...this.$refs.colorPicker.palette]
-    if (this.colorPalette.length > 0) {
-      this.$refs.colorPicker.palette = this.colorPalette
+    this.factoryColorPalette = [...this.colorPickerPalette]
+    if (this.colorPalette && Array.isArray(this.colorPalette)) {
+      this.colorPickerPalette.splice(0, Infinity, ...this.colorPalette)
     }
-    this.colorPickerPalette = this.$refs.colorPicker.palette
-    this.oldColorPalette = [...this.colorPickerPalette]
     if (this.rgbColor) {
       this.prependColorToPalette(this.rgbColor)
     }
+    this.saveState()
     nextTick(() => {
       this.loading = false
     })
@@ -206,12 +207,16 @@ export default {
     resetColorPalette() {
       this.colorPickerPalette.splice(0, Infinity, ...this.factoryColorPalette)
     },
-    prependColorToPalette(color) {
-      if (!this.colorPickerPalette.includes(color)) {
-        const palette = [...this.colorPickerPalette]
+    prependColorToPalette(color, destinationStorage) {
+      if (destinationStorage === undefined) {
+        destinationStorage = this
+      }
+      color = color.toLowerCase()
+      if (!destinationStorage.colorPickerPalette.includes(color)) {
+        const palette = [...destinationStorage.colorPickerPalette]
         palette.pop()
-        palette.splice(0, 0, this.rgbColor)
-        this.colorPickerPalette = palette
+        palette.splice(0, 0, color)
+        Vue.set(destinationStorage, 'colorPickerPalette', palette)
       }
     },
     /**
@@ -228,6 +233,11 @@ export default {
       const g = Number('0x' + rgb.substring(3, 5))
       const b = Number('0x' + rgb.substring(5, 7))
       return (0.3 * r + 0.59 * g + 0.11 * b) / 255.0
+    },
+    saveState() {
+      this.savedState.rgbColor = this.rgbColor
+      this.savedState.colorPickerPalette = [...this.colorPickerPalette]
+      this.prependColorToPalette(this.rgbColor, this.savedState)
     },
   },
 }

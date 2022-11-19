@@ -63,13 +63,18 @@
         {{ label }}
       </button>
     </ColorPicker>
-    <input type="submit" class="icon-confirm confirm-button" value="">
+    <input type="submit"
+           class="icon-confirm confirm-button"
+           value=""
+           @click="$emit('update', rgbColor)"
+    >
   </div>
 </template>
 <script>
 import Actions from '@nextcloud/vue/dist/Components/Actions'
 import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
 import ColorPicker from '@nextcloud/vue/dist/Components/ColorPicker'
+import { nextTick } from 'vue'
 
 export default {
   name: 'ColorPickerExtension',
@@ -107,40 +112,71 @@ export default {
   },
   data() {
     return {
-      rgbColor: this.value,
+      // rgbColor: this.value,
       pickerVisible: false,
       oldRgbColor: this.value,
-      colorPickerPalette: this.colorPalette,
+      colorPickerPalette: this.colorPalette, // shadow of this.$refs.colorPicker.palette
+      colorPaletteHasChanged: false,
       oldColorPalette: this.colorPalette,
       factoryColorPalette: [],
+      loading: true,
     }
   },
   computed: {
-    colorPaletteHasChanged() {
-      return this.colorPickerPalette.toString() !== this.oldColorPalette.toString()
-    },
     colorPaletteIsDefault() {
       return this.colorPickerPalette.toString() === this.factoryColorPalette.toString()
     },
+    /**
+     * Writable computable property which updates this.value through
+     * sending an event to the parent.
+     */
+    rgbColor: {
+      set(newValue) {
+        if (!this.loading) {
+          this.$emit('update:value', newValue)
+          this.$emit('input', newValue)
+        }
+        return newValue
+      },
+      get() {
+        return this.value
+      }
+    },
   },
   watch: {
-    rgbColor(newValue, oldValue) {
-      console.info('COLOR UPDATE', newValue, oldValue)
-      this.$emit('update:value', newValue)
-      this.$emit('input', newValue)
+    colorPickerPalette: {
+      handler(newValue, oldValue) {
+        if (this.loading) {
+          return
+        }
+        if (this.colorPickerPalette !== this.$refs.colorPicker.palette) {
+          this.$refs.colorPicker.palette = this.colorPickerPalette
+        }
+        if (!!newValue && !!oldValue && newValue.toString() === oldValue.toString()) {
+          return
+        }
+        this.colorPaletteHasChanged = true
+        this.$emit('update:color-palette', newValue)
+      },
+      deep: true,
     },
-    colorPaletteHasChanged(newValue, oldValue) {
-      if (newValue) {
-        console.info('EMIT COLOR PALETTER CHANGED', this.colorPickerPalette)
-        this.$emit('update:color-palette', this.colorPickerPalette)
+    colorPalette(newValue, oldValue) {
+      if (this.loading) {
+        return
       }
-    }
+      if (!!newValue && !!oldValue && newValue.toString() === oldValue.toString()) {
+        return
+      }
+      if (this.colorPalette.length > 0) {
+        this.colorPickerPalette.splice(0, Infinity, ...this.colorPalette)
+      }
+    },
   },
   created() {
-    console.info('VALUE', this.value, this.rgbColor, this.oldRgbColor)
+    // console.info('VALUE', this.value, this.rgbColor, this.oldRgbColor)
+    // console.info('LOADING IN CREATED', this.loading)
   },
   mounted() {
-    console.info('COLOR PICKER', this)
     this.factoryColorPalette = [...this.$refs.colorPicker.palette]
     if (this.colorPalette.length > 0) {
       this.$refs.colorPicker.palette = this.colorPalette
@@ -150,6 +186,9 @@ export default {
     if (this.rgbColor) {
       this.prependColorToPalette(this.rgbColor)
     }
+    nextTick(() => {
+      this.loading = false
+    })
   },
   methods: {
     submitCustomColor(color) {
@@ -168,13 +207,22 @@ export default {
       this.colorPickerPalette.splice(0, Infinity, ...this.factoryColorPalette)
     },
     prependColorToPalette(color) {
-      const palette = this.colorPickerPalette
-      console.info('CUSTOM COLOR SUBMIT', color, palette, this.$refs.colorPicker, this.$refs.colorPicker.palette)
-      if (!palette.includes(color)) {
+      if (!this.colorPickerPalette.includes(color)) {
+        const palette = [...this.colorPickerPalette]
         palette.pop()
         palette.splice(0, 0, this.rgbColor)
+        this.colorPickerPalette = palette
       }
     },
+    /**
+     * Convert an RGH color to a grey-scale value. This is used to
+     * switch the trigger-button color between black and white,
+     * depending on the grey-value of the color.
+     *
+     * @param {array} rgb RGB color array.
+     *
+     * @return {number} Grey-value corresponding to rgb.
+     */
     rgbToGrayScale(rgb) {
       const r = Number('0x' + rgb.substring(1, 3))
       const g = Number('0x' + rgb.substring(3, 5))

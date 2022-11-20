@@ -111,6 +111,12 @@ export default {
     &[type='number'] {
       direction:rtl;
     }
+    &:read-only {
+      background-color: var(--color-background-dark);
+      color: var(--color-text-maxcontrast);
+      cursor: default;
+      opacity: 1;
+    }
   }
 
   .hint {

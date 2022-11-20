@@ -36,6 +36,7 @@
                          label=""
                          class="flex-grow"
                          :placeholder="placeholder"
+                         :readonly="readonly === 'basename'"
                          @update="$emit('update', pathInfo)"
       />
     </div>
@@ -81,6 +82,10 @@ export default {
     },
     placeholder: {
       type: String,
+      default: undefined,
+    },
+    readonly: {
+      type: [Boolean, String],
       default: undefined,
     },
     filePickerTitle: {

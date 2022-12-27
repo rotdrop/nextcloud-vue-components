@@ -23,7 +23,7 @@
   -->
 
 <template>
-  <form @submit.prevent="">
+  <form :class="cloudVersionClasses" @submit.prevent="">
     <div class="input-wrapper">
       <label :for="id" :class="{ empty: !label || label === '' }">{{ label }}</label>
       <input v-bind="$attrs"
@@ -49,6 +49,15 @@
 </template>
 
 <script>
+
+const cloudVersion = OC.config.versionstring.split('.')
+const cloudVersionClasses = [
+  'cloud-version',
+  'cloud-version-major-' + cloudVersion[0],
+  'cloud-version-minor-' + cloudVersion[1],
+  'cloud-version-patch-' + cloudVersion[2],
+]
+
 export default {
   name: 'SettingsInputText',
   props: {
@@ -80,6 +89,7 @@ export default {
   data() {
     return {
       inputVal: this.value,
+      cloudVersionClasses,
     }
   },
   computed: {
@@ -95,6 +105,20 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+.cloud-version {
+  --cloud-border-radius: var(--border-radius);
+  --cloud-confirm-size: 34px;
+  --cloud-confirm-left-margin: -8px;
+  --cloud-input-border-width: 1px;
+  --cloud-input-border-color: var(--color-border-dark);
+  &.cloud-version-major-25 {
+    --cloud-border-radius: var(--border-radius-large);
+    --cloud-confirm-size: 36px;
+    --cloud-confirm-left-margin: -13px;
+    --cloud-input-border-width: 2px;
+    --cloud-input-border-color: var(--color-border-maxcontrast);
+  }
+}
 .input-wrapper {
   display: flex;
   flex-wrap: wrap;
@@ -123,18 +147,28 @@ export default {
     color: var(--color-text-lighter);
   }
 
+  // Fixup for Nextcloud v25 not setting confirm button border
+  input[type='text'] {
+    + .icon-confirm {
+      border-width: var(--cloud-input-border-width);
+      border-color: var(--cloud-input-border-color);
+    }
+  }
+
   // Fixup for Nextcloud not styling confirm after number input
   input[type='number'] {
     + .icon-confirm {
-      margin-left: -8px !important;
+      margin-left: var(--cloud-confirm-left-margin) !important;
       border-left-color: transparent !important;
-      border-radius: 0 var(--border-radius) var(--border-radius) 0 !important;
+      border-radius: 0 var(--cloud-border-radius) var(--cloud-border-radius) 0 !important;
+      border-width: var(--cloud-input-border-width);
+      border-color: var(--cloud-input-border-color);
       background-clip: padding-box;
       /* Avoid background under border */
       background-color: var(--color-main-background) !important;
       opacity: 1;
-      height: 34px;
-      width: 34px;
+      height: var(--cloud-confirm-size);
+      width: var(--cloud-confirm-size);
       padding: 7px 6px;
       cursor: pointer;
       margin-right: 0;

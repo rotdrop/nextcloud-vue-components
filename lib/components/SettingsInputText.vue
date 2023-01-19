@@ -1,5 +1,5 @@
 <!--
-  - @copyright Copyright (c) 2019, 2022 Julius Härtl <jus@bitgrid.net>
+  - @copyright Copyright (c) 2019, 2022, 2023 Julius Härtl <jus@bitgrid.net>
   - @copyright Copyright (c) 2022 Claus-Justus Heine <himself@claus-justus-heine.de>
   -
   - @author Julius Härtl <jus@bitgrid.net>
@@ -28,11 +28,16 @@
       <label :for="id" :class="{ empty: !label || label === '' }">{{ label }}</label>
       <input v-bind="$attrs"
              :id="id"
-             :type="type"
+             :type="inputType"
              :value="inputVal"
              :disabled="disabled"
              :placeholder="placeholder"
              @input="$emit('input', $event.target.value); inputVal = $event.target.value;"
+      >
+      <input v-show="visibilityToggle"
+             v-model="inputIsVisible"
+             type="checkbox"
+             :disabled="disabled"
       >
       <input type="submit"
              class="icon-confirm"
@@ -88,6 +93,7 @@ export default {
   },
   data() {
     return {
+      inputIsVisible: this.type !== 'password',
       inputVal: this.value,
       cloudVersionClasses,
     }
@@ -95,6 +101,9 @@ export default {
   computed: {
     id() {
       return 'settings-input-text-' + this._uid
+    },
+    inputType() {
+      return this.type !== 'password' || !this.inputIsVisible ? this.type : 'text'
     },
   },
   watch: {

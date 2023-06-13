@@ -128,12 +128,16 @@ export default {
   --cloud-confirm-left-margin: -8px;
   --cloud-input-border-width: 1px;
   --cloud-input-border-color: var(--color-border-dark);
-  &.cloud-version-major-25 {
+  --cloud-icon-confirm: var(--icon-confirm-000);
+  --cloud-icon-confirm-fade: var(--icon-confirm-fade-000);
+  &.cloud-version-major-25, &.cloud-version-major-26 {
     --cloud-border-radius: var(--border-radius-large);
     --cloud-confirm-size: 36px;
     --cloud-confirm-left-margin: -13px;
     --cloud-input-border-width: 2px;
     --cloud-input-border-color: var(--color-border-maxcontrast);
+    --cloud-icon-confirm: var(--icon-confirm-dark);
+    --cloud-icon-confirm-fade: var(--icon-confirm-fade-dark);
   }
 }
 .component-wrapper {
@@ -193,22 +197,9 @@ export default {
 
   // Fixup for Nextcloud v25 not setting confirm button border
   input[type='text'], input[type='password'], input[type='number'], input[type='email'] {
-    &:not(:active):not(:hover):not(:focus), & {
-      + .icon-confirm {
-        border-width: var(--cloud-input-border-width);
-        border-color: var(--cloud-input-border-color);
-        &:disabled {
-          &, &:hover, &:active, &:focus {
-            background-color: var(--color-background-dark) !important;
-            border-color: var(--cloud-input-border-color) !important;
-            border-left-color: transparent !important;
-            border-radius: 0 var(--cloud-border-radius) var(--cloud-border-radius) 0 !important;
-            color: var(--color-text-maxcontrast) !important;
-            cursor: default;
-            opacity: 1;
-          }
-        }
-      }
+    + .icon-confirm {
+      border-width: var(--cloud-input-border-width);
+      border-color: var(--cloud-input-border-color);
     }
     &:not(:active):not(:hover):not(:focus):read-only, &:read-only {
       + :deep(.icon-confirm), :deep(.icon-confirm:hover) {
@@ -221,7 +212,7 @@ export default {
   }
 
   // Fixup for Nextcloud not styling confirm after number input
-  input[type='number'] {
+  input[type='password'], input[type='number'], input[type='email'] {
     + .icon-confirm {
       margin-left: var(--cloud-confirm-left-margin) !important;
       border-left-color: transparent !important;
@@ -239,7 +230,7 @@ export default {
       margin-right: 0;
       &:disabled {
         cursor: default;
-        background-image: var(--icon-confirm-fade-000);
+        background-image: var(--cloud-icon-confirm-fade);
       }
     }
     &:not(:active):not(:hover):not(:focus):invalid + .icon-confirm {

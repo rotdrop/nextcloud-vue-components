@@ -1,4 +1,4 @@
- <!--
+<!--
   - @copyright Copyright (c) 2019, 2022, 2023 Julius Härtl <jus@bitgrid.net>
   - @copyright Copyright (c) 2022 Claus-Justus Heine <himself@claus-justus-heine.de>
   -
@@ -210,6 +210,14 @@ export default {
         }
       }
     }
+    &:not(:active):not(:hover):not(:focus):read-only, &:read-only {
+      + :deep(.icon-confirm), :deep(.icon-confirm:hover) {
+        background-color: var(--color-background-dark) !important;
+        border-color: var(--cloud-input-border-color) !important;
+        border-left-color: transparent !important;
+        border-radius: 0 var(--cloud-border-radius) var(--cloud-border-radius) 0 !important;
+      }
+    }
   }
 
   // Fixup for Nextcloud not styling confirm after number input
@@ -237,7 +245,7 @@ export default {
     &:not(:active):not(:hover):not(:focus):invalid + .icon-confirm {
       border-color: var(--color-error);
     }
-    &:not(:active):not(:hover):not(:focus) + .icon-confirm {
+    &:not(:active):not(:hover):not(:focus):not(:read-only) + .icon-confirm {
       &:active, &:hover, &:focus {
         border-color: var(--color-primary-element) !important;
         border-radius: var(--border-radius) !important;
@@ -247,11 +255,13 @@ export default {
       }
     }
     &:active, &:hover, &:focus {
-      + .icon-confirm {
-        border-color: var(--color-primary-element) !important;
-        border-left-color: transparent !important;
-        /* above previous input */
-        z-index: 2;
+      &:not(:read-only) {
+        + .icon-confirm {
+          border-color: var(--color-primary-element) !important;
+          border-left-color: transparent !important;
+          /* above previous input */
+          z-index: 2;
+        }
       }
     }
   }

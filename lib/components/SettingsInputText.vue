@@ -123,21 +123,21 @@ export default {
 </script>
 <style lang="scss" scoped>
 .cloud-version {
-  --cloud-border-radius: var(--border-radius);
-  --cloud-confirm-size: 34px;
-  --cloud-confirm-left-margin: -8px;
-  --cloud-input-border-width: 1px;
-  --cloud-input-border-color: var(--color-border-dark);
-  --cloud-icon-confirm: var(--icon-confirm-000);
-  --cloud-icon-confirm-fade: var(--icon-confirm-fade-000);
-  &.cloud-version-major-25, &.cloud-version-major-26 {
-    --cloud-border-radius: var(--border-radius-large);
-    --cloud-confirm-size: 36px;
-    --cloud-confirm-left-margin: -13px;
-    --cloud-input-border-width: 2px;
-    --cloud-input-border-color: var(--color-border-maxcontrast);
-    --cloud-icon-confirm: var(--icon-confirm-dark);
-    --cloud-icon-confirm-fade: var(--icon-confirm-fade-dark);
+  --cloud-border-radius: var(--border-radius-large);
+  --cloud-confirm-size: 36px;
+  --cloud-confirm-left-margin: -13px;
+  --cloud-input-border-width: 2px;
+  --cloud-input-border-color: var(--color-border-maxcontrast);
+  --cloud-icon-confirm: var(--icon-confirm-dark);
+  --cloud-icon-confirm-fade: var(--icon-confirm-fade-dark);
+  &.cloud-version-major-24 {
+    --cloud-border-radius: var(--border-radius);
+    --cloud-confirm-size: 34px;
+    --cloud-confirm-left-margin: -8px;
+    --cloud-input-border-width: 1px;
+    --cloud-input-border-color: var(--color-border-dark);
+    --cloud-icon-confirm: var(--icon-confirm-000);
+    --cloud-icon-confirm-fade: var(--icon-confirm-fade-000);
   }
 }
 .component-wrapper {

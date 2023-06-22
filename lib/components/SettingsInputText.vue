@@ -53,11 +53,11 @@
              :for="id + '-visibility-toggle'"
              class="visibility-toggle"
       />
-      <p v-if="hint !== '' || !!$slots.hint" class="hint">
-        {{ hint }}
-        <slot name="hint" />
-      </p>
     </div>
+    <p v-if="hint !== '' || !!$slots.hint" class="hint">
+      {{ hint }}
+      <slot name="hint" />
+    </p>
   </form>
 </template>
 

@@ -1,7 +1,7 @@
 <script>
 /**
  * @author Claus-Justus Heine <himself@claus-justus-heine.de>
- * @copyright 2022 Claus-Justus Heine
+ * @copyright 2022, 2023 Claus-Justus Heine
  * @license AGPL-3.0-or-later
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,13 +26,14 @@
     <div class="flex flex-center flex-wrap">
       <div class="dirname">
         <a href="#"
-           class="file-picker button"
+           class="file-picker button icon-folder"
            @click="openFilePicker(...arguments)"
         >
           {{ pathInfo.dirName + (pathInfo.dirName !== '/' ? '/' : '') }}
         </a>
       </div>
-      <SettingsInputText v-model="pathInfo.baseName"
+      <SettingsInputText v-if="!onlyDirName"
+                         v-model="pathInfo.baseName"
                          label=""
                          class="flex-grow"
                          :placeholder="placeholder"
@@ -46,7 +47,7 @@
 
 // import { appName } from '../config.js'
 import Vue from 'vue'
-import { getFilePickerBuilder, showError, showInfo, TOAST_PERMANENT_TIMEOUT } from '@nextcloud/dialogs'
+import { getFilePickerBuilder, /* showError, showInfo, TOAST_PERMANENT_TIMEOUT, */ } from '@nextcloud/dialogs'
 import SettingsInputText from '../components/SettingsInputText'
 
 export default {
@@ -76,6 +77,10 @@ export default {
       type: String,
       default: undefined,
     },
+    onlyDirName: {
+      type: Boolean,
+      default: false,
+    },
     hint: {
       type: String,
       default: undefined,
@@ -90,8 +95,7 @@ export default {
     },
     filePickerTitle: {
       type: String,
-      // default: t(appName, 'Choose a prefix-folder'),
-      default: 'Choose a prefix-folder',
+      default: () => this.onlyDirName ? 'Choose a folder' : 'Choose a prefix-folder',
     },
   },
   data() {
@@ -110,10 +114,13 @@ export default {
     if (!this.pathInfo.dirName && this.dirName) {
       Vue.set(this.pathInfo, 'dirName', this.dirName)
     }
+    if (!this.pathInfo.dirName) {
+      Vue.set(this.pathInfo, 'dirName', '/')
+    }
   },
   computed: {
     pathName() {
-      return (this.pathInfo.dirName ? this.pathInfo.dirName + '/' : '') + this.pathInfo.baseName
+      return (this.pathInfo.dirName ? this.pathInfo.dirName + '/' : '') + (this.onlyDirName ? '' : this.pathInfo.baseName)
     }
   },
   watch: {
@@ -146,6 +153,9 @@ export default {
         // showInfo(t(appName, 'Selected path: "{dir}/{base}/".', { dir, base: this.pathInfo.baseName }))
         this.$emit('update:dirName', dir, this.pathInfo.baseName)
         Vue.set(this.pathInfo, 'dirName', dir)
+        if (this.onlyDirName) {
+          this.$emit('update', this.pathInfo)
+        }
       }
     },
   },
@@ -158,9 +168,11 @@ export default {
     font-family:monospace;
     .button {
       display:block;
+      background-position: 8px center;
+      padding-left: 30px;
     }
   }
-   .flex {
+  .flex {
     display:flex;
     &.flex-center {
       align-items:center;

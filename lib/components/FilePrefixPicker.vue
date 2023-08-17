@@ -27,7 +27,7 @@
       <div class="dirname">
         <a href="#"
            class="file-picker button icon-folder"
-           @click="openFilePicker(...arguments)"
+           @click.prevent.stop="!disabled && openFilePicker(...arguments)"
         >
           {{ pathInfo.dirName + (pathInfo.dirName !== '/' ? '/' : '') }}
         </a>
@@ -38,6 +38,7 @@
                          class="flex-grow"
                          :placeholder="placeholder"
                          :readonly="readonly === 'basename'"
+                         :disabled="disabled"
                          @update="$emit('update', pathInfo)"
       />
     </div>
@@ -92,6 +93,10 @@ export default {
     readonly: {
       type: [Boolean, String],
       default: undefined,
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
     },
     filePickerTitle: {
       type: String,

@@ -1,68 +1,66 @@
-<script>
-/**
- * @author Claus-Justus Heine <himself@claus-justus-heine.de>
- * @copyright 2022 Claus-Justus Heine
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-</script>
+<!--
+ - @author Claus-Justus Heine <himself@claus-justus-heine.de>
+ - @copyright 2022, 2024 Claus-Justus Heine
+ - @license AGPL-3.0-or-later
+ -
+ - This program is free software: you can redistribute it and/or modify
+ - it under the terms of the GNU Affero General Public License as
+ - published by the Free Software Foundation, either version 3 of the
+ - License, or (at your option) any later version.
+ -
+ - This program is distributed in the hope that it will be useful,
+ - but WITHOUT ANY WARRANTY; without even the implied warranty of
+ - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ - GNU Affero General Public License for more details.
+ -
+ - You should have received a copy of the GNU Affero General Public License
+ - along with this program. If not, see <http://www.gnu.org/licenses/>.
+ -->
 <template>
   <div class="color-picker-container flex-container flex-center">
-    <Actions>
-      <ActionButton icon="icon-play"
-                    @click="pickerVisible = true"
+    <NcActions>
+      <NcActionButton icon="icon-play"
+                      @click="pickerVisible = true"
       >
         {{ componentLabels.openColorPicker }}
-      </ActionButton>
-      <ActionButton icon="icon-confirm"
-                    @click="submitColorChoice"
+      </NcActionButton>
+      <NcActionButton icon="icon-confirm"
+                      @click="submitColorChoice"
       >
         {{ componentLabels.submitColorChoice }}
-      </ActionButton>
-      <ActionButton icon="icon-history"
-                    :disabled="savedState.rgbColor === rgbColor"
-                    @click="rgbColor = savedState.rgbColor"
+      </NcActionButton>
+      <NcActionButton icon="icon-history"
+                      :disabled="savedState.rgbColor === rgbColor"
+                      @click="rgbColor = savedState.rgbColor"
       >
         {{ componentLabels.revertColor }}
-      </ActionButton>
-      <ActionButton icon="icon-toggle-background"
-                    :disabled="!colorPaletteHasChanged"
-                    @click="revertColorPalette"
+      </NcActionButton>
+      <NcActionButton icon="icon-toggle-background"
+                      :disabled="!colorPaletteHasChanged"
+                      @click="revertColorPalette"
       >
         {{ componentLabels.revertColorPalette }}
-      </ActionButton>
-      <ActionButton icon="icon-toggle-background"
-                    :disabled="colorPaletteIsDefault"
-                    @click="resetColorPalette"
+      </NcActionButton>
+      <NcActionButton icon="icon-toggle-background"
+                      :disabled="colorPaletteIsDefault"
+                      @click="resetColorPalette"
       >
         {{ componentLabels.resetColorPalette }}
-      </ActionButton>
-    </Actions>
-    <ColorPicker ref="colorPicker"
-                 v-model="rgbColor"
-                 :open.sync="pickerVisible"
-                 @submit="submitCustomColor"
-                 @update:open="handleOpen"
-                 @close="() => false"
+      </NcActionButton>
+    </NcActions>
+    <NcColorPicker ref="colorPicker"
+                   v-model="rgbColor"
+                   :open.sync="pickerVisible"
+                   @submit="submitCustomColor"
+                   @update:open="handleOpen"
+                   @close="() => false"
     >
       <button :style="{'background-color': rgbColor, color: rgbToGrayScale(rgbColor) > 0.5 ? 'black' : 'white'}"
               class="trigger-button"
       >
         {{ label }}
       </button>
-    </ColorPicker>
+    </NcColorPicker>
     <input type="submit"
            class="icon-confirm confirm-button"
            value=""
@@ -71,18 +69,19 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
-import Actions from '@nextcloud/vue/dist/Components/NcActions'
-import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton'
-import ColorPicker from '@nextcloud/vue/dist/Components/NcColorPicker'
-import { nextTick } from 'vue'
+import {
+  NcActions,
+  NcActionButton,
+  NcColorPicker,
+} from '@nextcloud/vue'
+import { nextTick, set as vueSet } from 'vue'
 
 export default {
   name: 'ColorPickerExtension',
   components: {
-    ActionButton,
-    Actions,
-    ColorPicker,
+    NcActionButton,
+    NcActions,
+    NcColorPicker,
   },
   inheritAttrs: false,
   props: {
@@ -108,6 +107,7 @@ export default {
     },
     colorPalette: {
       type: Array,
+      default: () => [],
     },
   },
   data() {
@@ -143,7 +143,7 @@ export default {
       },
       get() {
         return this.value
-      }
+      },
     },
     colorPickerPalette: {
       set(newValue) {
@@ -158,7 +158,7 @@ export default {
       },
       get() {
         return this.$refs.colorPicker ? this.$refs.colorPicker.palette : undefined
-      }
+      },
     },
   },
   watch: {
@@ -216,7 +216,7 @@ export default {
         const palette = [...destinationStorage.colorPickerPalette]
         palette.pop()
         palette.splice(0, 0, color)
-        Vue.set(destinationStorage, 'colorPickerPalette', palette)
+        vueSet(destinationStorage, 'colorPickerPalette', palette)
       }
     },
     /**
@@ -224,7 +224,7 @@ export default {
      * switch the trigger-button color between black and white,
      * depending on the grey-value of the color.
      *
-     * @param {array} rgb RGB color array.
+     * @param {Array} rgb RGB color array.
      *
      * @return {number} Grey-value corresponding to rgb.
      */

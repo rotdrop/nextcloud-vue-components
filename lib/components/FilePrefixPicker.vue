@@ -1,23 +1,21 @@
-<script>
-/**
- * @author Claus-Justus Heine <himself@claus-justus-heine.de>
- * @copyright 2022, 2023, 2024 Claus-Justus Heine
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-</script>
+<!--
+ - @author Claus-Justus Heine <himself@claus-justus-heine.de>
+ - @copyright 2022, 2023, 2024 Claus-Justus Heine
+ - @license AGPL-3.0-or-later
+ -
+ - This program is free software: you can redistribute it and/or modify
+ - it under the terms of the GNU Affero General Public License as
+ - published by the Free Software Foundation, either version 3 of the
+ - License, or (at your option) any later version.
+ -
+ - This program is distributed in the hope that it will be useful,
+ - but WITHOUT ANY WARRANTY; without even the implied warranty of
+ - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ - GNU Affero General Public License for more details.
+ -
+ - You should have received a copy of the GNU Affero General Public License
+ - along with this program. If not, see <http://www.gnu.org/licenses/>.
+ -->
 <template>
   <div class="input-wrapper">
     <div v-if="hint" class="hint">
@@ -25,7 +23,8 @@
     </div>
     <div class="flex flex-center flex-wrap">
       <div v-tooltip="unclippedPopup(pathInfo.dirName)"
-           class="dirname">
+           class="dirname"
+      >
         <a href="#"
            class="file-picker button icon-folder"
            @click.prevent.stop="!disabled && openFilePicker(...arguments)"
@@ -49,9 +48,14 @@
 <script>
 
 // import { appName } from '../config.js'
-import Vue from 'vue'
-import { getFilePickerBuilder, /* showError, showInfo, TOAST_PERMANENT_TIMEOUT, */ } from '@nextcloud/dialogs'
-import SettingsInputText from '../components/SettingsInputText'
+import { set as vueSet } from 'vue'
+import {
+  getFilePickerBuilder,
+  // showError,
+  // showInfo,
+  // TOAST_PERMANENT_TIMEOUT,
+} from '@nextcloud/dialogs'
+import SettingsInputText from '../components/SettingsInputText.vue'
 import '@nextcloud/dialogs/style.css'
 
 export default {
@@ -59,10 +63,6 @@ export default {
   components: {
     SettingsInputText,
   },
-  emits: [
-    'input',
-    // 'update:modelValue', Vue 3
-  ],
   props: {
     value: {
       type: Object,
@@ -106,6 +106,10 @@ export default {
       default: () => this.onlyDirName ? 'Choose a folder' : 'Choose a prefix-folder',
     },
   },
+  emits: [
+    'input',
+    // 'update:modelValue', Vue 3
+  ],
   data() {
     return {
       pathInfo: {
@@ -114,27 +118,27 @@ export default {
       },
     }
   },
-  created() {
-    this.pathInfo = this.value
-    if (!this.pathInfo.baseName && this.baseName) {
-      Vue.set(this.pathInfo, 'baseName', this.baseName)
-    }
-    if (!this.pathInfo.dirName && this.dirName) {
-      Vue.set(this.pathInfo, 'dirName', this.dirName)
-    }
-    if (!this.pathInfo.dirName) {
-      Vue.set(this.pathInfo, 'dirName', '/')
-    }
-  },
   computed: {
     pathName() {
       return (this.pathInfo.dirName ? this.pathInfo.dirName + '/' : '') + (this.onlyDirName ? '' : this.pathInfo.baseName)
-    }
+    },
   },
   watch: {
     pathName(newValue, oldValue) {
       this.$emit('input', this.pathInfo) // Vue 2
     },
+  },
+  created() {
+    this.pathInfo = this.value
+    if (!this.pathInfo.baseName && this.baseName) {
+      vueSet(this.pathInfo, 'baseName', this.baseName)
+    }
+    if (!this.pathInfo.dirName && this.dirName) {
+      vueSet(this.pathInfo, 'dirName', this.dirName)
+    }
+    if (!this.pathInfo.dirName) {
+      vueSet(this.pathInfo, 'dirName', '/')
+    }
   },
   methods: {
     async openFilePicker() {
@@ -153,14 +157,14 @@ export default {
       }
       if (!dir.startsWith('/')) {
         // showError(t(appName, 'Invalid path selected: "{dir}".', { dir }), { timeout: TOAST_PERMANENT_TIMEOUT })
-        $this.$emit('error:invalidDirName', dir)
-      } else  {
+        this.$emit('error:invalid-dir-name', dir)
+      } else {
         if (dir === '/') {
           dir = ''
         }
         // showInfo(t(appName, 'Selected path: "{dir}/{base}/".', { dir, base: this.pathInfo.baseName }))
         this.$emit('update:dirName', dir, this.pathInfo.baseName)
-        Vue.set(this.pathInfo, 'dirName', dir)
+        vueSet(this.pathInfo, 'dirName', dir)
         if (this.onlyDirName) {
           this.$emit('update', this.pathInfo)
         }
@@ -174,7 +178,7 @@ export default {
         // shown: true,
         // triggers: [],
         csstag: ['vue-tooltip-unclipped-popup'],
-      };
+      }
     },
   },
 }

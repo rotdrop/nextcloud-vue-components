@@ -72,8 +72,6 @@
 </template>
 
 <script setup lang="ts">
-import type { Color as NCColorType } from '@nextcloud/vue'
-
 import { translate as t } from '@nextcloud/l10n'
 import {
   NcActionButton,
@@ -137,9 +135,14 @@ const emit = defineEmits([
   'update:colorPalette',
 ])
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isNCColorType = (arg: any): arg is NCColorType =>
-  !!arg && !(arg instanceof RGBColor) && (typeof arg === 'object') && !isNaN(arg.r + arg.g + arg.b)
+type NCColorType = Pick<RGBColor, 'r' | 'g' | 'b' | 'name'>
+
+const isNCColorType = (arg: unknown): arg is NCColorType =>
+  !!arg && typeof arg === 'object' && !(arg instanceof RGBColor)
+  && 'r' in arg && typeof arg.r === 'number'
+  && 'g' in arg && typeof arg.g === 'number'
+  && 'b' in arg && typeof arg.b === 'number'
+  && (!('name' in arg) || typeof arg.name === 'string')
 
 const anyToRgb = (value: NCColorType|RGBColor|string|number[]) => {
   if (value instanceof RGBColor) {
@@ -190,8 +193,8 @@ const prependColorToPalette = (rgbColor: RGBColor, palette: RGBColor[]) => {
   }
 }
 
-const submitCustomColor = (color: RGBColor) => {
-  prependColorToPalette(color, colorPickerPalette.value!)
+const submitCustomColor = (color: string|undefined) => {
+  prependColorToPalette(anyToRgb(color ?? rgbColorString.value), colorPickerPalette.value!)
 }
 
 const submitColorChoice = () => {

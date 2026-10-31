@@ -5,11 +5,97 @@ The purpose of this repository is to factor out common code that I use in severa
 
 **This is public, so you are invited to use these things, but I do not plan to make this a well-maintained Vue library.**
 
-This reposity is used by my Nextcloud apps
-- [PDF Downlaoder](https://github.com/rotdrop/nextcloud-app-pdf-downloader)
+This repository is used by my Nextcloud apps
+- [PDF Downloader](https://github.com/rotdrop/nextcloud-app-pdf-downloader)
 - [Archive Explorer](https://github.com/rotdrop/nextcloud-app-files-archive)
 - [DokuWiki Wrapper](https://github.com/rotdrop/nextcloud-app-dokuwiki)
 - [Roundcube Wrapper](https://github.com/rotdrop/nextcloud-roundcube)
 - [Redaxo Wrapper](https://github.com/rotdrop/nextcloud-app-redaxo)
 - [Orchestra Management](https://github.com/rotdrop/cafevdb)
 - [Orchestra Management Member's App](https://github.com/rotdrop/cafevdb-members)
+
+## Installation and imports
+
+```sh
+npm install @rotdrop/nextcloud-vue-components
+```
+
+The package targets Vue 3.5 and Nextcloud applications. Vue and the directly
+imported Nextcloud libraries are peer dependencies, so the consuming application
+can share its own compatible versions. `floating-vue` and `uuid` are direct runtime
+dependencies.
+
+Import from the package root or keep using the existing source paths:
+
+```ts
+import { TextFieldWithSubmitButton, Color } from '@rotdrop/nextcloud-vue-components'
+import FilePrefixPicker from '@rotdrop/nextcloud-vue-components/lib/components/FilePrefixPicker.vue'
+```
+
+## Source-only distribution
+
+Publishing source code is valid npm practice. This package intentionally ships
+Vue single-file components, TypeScript, and SCSS, without generated JavaScript,
+CSS, or declaration bundles. There is no build, `prepare`, or `prepack` step.
+The `files` allowlist includes `lib/`; npm also includes the package manifest,
+README, and license. The changelog is included explicitly in the package manifest.
+Tests, CI configuration, and the development lockfile are not published.
+
+The consuming application's bundler must compile these sources, including sources
+inside `node_modules`. For Vite, use `@vitejs/plugin-vue` and install `sass` as a
+development dependency. With webpack, configure Vue, TypeScript, and Sass loaders
+and ensure this package is not excluded by a blanket `node_modules` rule.
+TypeScript consumers should use `moduleResolution: "Bundler"`, `noEmit: true`,
+and `allowImportingTsExtensions: true`, and use `vue-tsc` for Vue type checking.
+This is not a prebuilt library for plain Node.js, direct browser imports, or
+server-side rendering.
+
+Components using translations require the consuming application's `APP_NAME`
+compile-time constant. For example, in a Vite configuration:
+
+```ts
+define: {
+  APP_NAME: JSON.stringify('my-nextcloud-app'),
+}
+```
+
+The Nextcloud browser environment, theme variables, and icon styles must also be
+provided by the host application. Styles imported by the components/directive
+are handled by the host bundler.
+
+## Development
+
+Use Node.js 24 and npm 11:
+
+```sh
+npm ci
+npm test
+npm run typecheck
+npm pack --dry-run
+```
+
+`npm run test:watch` runs Vitest interactively. Tests cover the utilities and all
+five components, using small Nextcloud component doubles to isolate wrapper
+behavior. They also check the npm file list and compile the public entry point
+with Vue, TypeScript, and Sass. No compiled output is written to the repository.
+CI runs the tests, type checking, and package inspection on Node.js 24 and 26.
+Node.js 26 is a compatibility check: several upstream Nextcloud dependencies
+currently declare support only through Node.js 24.
+
+The committed lockfile makes development and CI installs reproducible; it does
+not pin dependencies for applications installing the published library.
+`npm run lint` and `npm run lint:fix` use Nextcloud's Vue 3 library ESLint preset.
+Existing code has formatting and documentation-rule debt under that preset;
+lint is not yet a CI gate. The obsolete PHP and unconfigured stylelint scripts
+have been removed.
+
+## Known limitations
+
+`sanitizeInlineSvg` only namespaces SVG IDs and `url(#...)` references. Despite
+its historical name, it is **not** an HTML/SVG security sanitizer.
+`DynamicSvgIcon` must receive trusted SVG markup. Other reference formats such
+as `href="#..."` are not currently rewritten.
+
+`FilePrefixPicker` currently retains and mutates the initial `modelValue` object;
+replacing that object in the parent does not synchronize its internal state.
+Treat it as an initial/shared path object for now.

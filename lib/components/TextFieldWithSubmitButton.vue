@@ -49,14 +49,13 @@
 
 <script setup lang="ts">
 import { NcTextField } from '@nextcloud/vue'
-import { watch } from 'vue'
 
 defineOptions({
   name: 'TextFieldWithSubmitButton',
   inheritAttrs: false,
 })
 
-const model = defineModel<string|number>({ default: undefined })
+const model = defineModel<string|number>({ default: '' })
 
 const props = withDefaults(defineProps<{
   hint?: string
@@ -68,16 +67,9 @@ const props = withDefaults(defineProps<{
   flexItemClasses: () => ['flex-justify-left', 'flex-align-start'],
 })
 
-const emit = defineEmits([
+defineEmits([
   'submit',
-  'update:modelValue',
 ])
-
-model.value = props.modelValue ?? ''
-
-watch(model, (value) => {
-  emit('update:modelValue', value)
-})
 </script>
 
 <style scoped lang="scss">

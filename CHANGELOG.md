@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Source-only package entry point exporting components, utilities, and the tooltip directive.
+- Vitest regression tests for all components, utilities, and the published package structure.
+- CI for tests, Vue/TypeScript checks, and package inspection on Node.js 24 and 26.
+- Reproducible development installs with a committed npm lockfile.
+- Consumer setup documentation and known limitations.
+
+### Fixed
+
+- Package entry point no longer points to a missing `index.js`.
+- Declare runtime dependencies and shared Vue/Nextcloud peer dependencies.
+- Replace obsolete Vue 2 shims and Jest settings with Vue 3 type checking.
+- Avoid duplicate text-field model updates.
+- Validate the pending select value and accept numeric zero as a required selection.
+- Convert Nextcloud color-picker string submissions into palette color objects.
+
+### Removed
+
+- Unused Babel configuration and unrelated PHP/unconfigured stylelint scripts.
+
 ## [1.0.2] - 2022-12-07
 
 ### Fixed

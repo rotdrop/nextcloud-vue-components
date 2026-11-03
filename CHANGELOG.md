@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Avoid duplicate text-field model updates.
 - Validate the pending select value and accept numeric zero as a required selection.
 - Convert Nextcloud color-picker string submissions into palette color objects.
+- Synchronize FilePrefixPicker with parent model changes without mutating input
+  objects; emit independent path snapshots for user edits and submissions.
 
 ### Removed
 

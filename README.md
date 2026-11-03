@@ -89,13 +89,24 @@ Existing code has formatting and documentation-rule debt under that preset;
 lint is not yet a CI gate. The obsolete PHP and unconfigured stylelint scripts
 have been removed.
 
+## FilePrefixPicker model
+
+`FilePrefixPicker` synchronizes with `modelValue`, including replacement objects
+and in-place changes to `dirName` or `baseName`. It never mutates the input object.
+User edits emit fresh `{ dirName, baseName }` snapshots through
+`update:modelValue`, `update:value`, and `input`; `submit` also receives a snapshot.
+Initialization and parent-driven updates do not emit model-update events.
+
+On initialization, empty model fields fall back to the separate `baseName` and
+`dirName` props, with `/` as the default directory. These separate props are
+initialization-only fallbacks. Subsequent model updates are copied exactly,
+including empty strings. Selecting the root directory still emits `dirName: ''`.
+Consumers that previously relied on shared-object mutation must handle
+`update:modelValue` (normally with `v-model`) or the legacy update events.
+
 ## Known limitations
 
 `sanitizeInlineSvg` only namespaces SVG IDs and `url(#...)` references. Despite
 its historical name, it is **not** an HTML/SVG security sanitizer.
 `DynamicSvgIcon` must receive trusted SVG markup. Other reference formats such
 as `href="#..."` are not currently rewritten.
-
-`FilePrefixPicker` currently retains and mutates the initial `modelValue` object;
-replacing that object in the parent does not synchronize its internal state.
-Treat it as an initial/shared path object for now.

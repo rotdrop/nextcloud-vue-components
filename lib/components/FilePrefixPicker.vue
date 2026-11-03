@@ -33,14 +33,15 @@
         </a>
       </div>
       <TextFieldWithSubmitButton v-if="!onlyDirName"
-                                 v-model="pathInfo.baseName"
+                                 :model-value="pathInfo.baseName"
                                  v-tooltip="unclippedPopup(pathInfo.baseName)"
                                  :label="placeholder"
                                  class="flex-grow"
                                  :placeholder="placeholder"
                                  :readonly="readonly === 'basename'"
                                  :disabled="disabled"
-                                 @submit="emit('submit', pathInfo)"
+                                 @update:model-value="updateBaseName"
+                                 @submit="emit('submit', { ...pathInfo })"
       />
     </div>
   </div>
@@ -57,7 +58,6 @@ import { translate as t } from '@nextcloud/l10n'
 import { basename } from '@nextcloud/paths'
 import {
   computed,
-  onBeforeMount,
   reactive,
   watch,
 } from 'vue'
@@ -107,12 +107,29 @@ const emit = defineEmits([
   'update:value',
 ])
 
-const pathInfo = reactive(props.modelValue)
+const pathInfo = reactive({
+  baseName: props.modelValue.baseName || props.baseName || '',
+  dirName: props.modelValue.dirName || props.dirName || '/',
+})
 
-const pathName = computed(
-  () =>
-    (pathInfo.dirName ? pathInfo.dirName + '/' : '') + (props.onlyDirName ? '' : pathInfo.baseName),
-)
+watch(() => props.modelValue, (value) => {
+  pathInfo.baseName = value.baseName
+  pathInfo.dirName = value.dirName
+}, { deep: true })
+
+const emitPathUpdate = () => {
+  emit('update:modelValue', { ...pathInfo })
+  emit('update:value', { ...pathInfo })
+  emit('input', { ...pathInfo })
+}
+
+const updateBaseName = (value: string|number) => {
+  const baseName = String(value)
+  if (baseName !== pathInfo.baseName) {
+    pathInfo.baseName = baseName
+    emitPathUpdate()
+  }
+}
 
 const displayDirName = computed(
   () => !pathInfo.dirName
@@ -124,26 +141,6 @@ const filePickerTitle = computed(
   () => props.filePickerTitle
     || (props.onlyDirName ? t(appName, 'Choose a folder') : t(appName, 'Choose a prefix-folder')),
 )
-
-watch(pathName, () => {
-  emit('update:modelValue', pathInfo)
-  emit('update:value', pathInfo)
-  emit('input', pathInfo)
-})
-
-onBeforeMount(() => {
-  pathInfo.dirName = props.modelValue?.dirName || ''
-  pathInfo.baseName = props.modelValue?.baseName || ''
-  if (!pathInfo.baseName && props.baseName) {
-    pathInfo.baseName = props.baseName
-  }
-  if (!pathInfo.dirName && props.dirName) {
-    pathInfo.dirName = props.dirName
-  }
-  if (!pathInfo.dirName) {
-    pathInfo.dirName = '/'
-  }
-})
 
 const openFilePicker = async () => {
   const picker = getFilePickerBuilder(filePickerTitle.value)
@@ -184,9 +181,12 @@ const openFilePicker = async () => {
     }
     showInfo(t(appName, 'Selected path: "{dir}/{base}/".', { dir, base: pathInfo.baseName }))
     emit('update:dirName', dir, pathInfo.baseName)
-    pathInfo.dirName = dir
+    if (pathInfo.dirName !== dir) {
+      pathInfo.dirName = dir
+      emitPathUpdate()
+    }
     if (props.onlyDirName) {
-      emit('submit', pathInfo)
+      emit('submit', { ...pathInfo })
     }
   }
 }

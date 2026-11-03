@@ -197,7 +197,9 @@ const actionClasses = computed(() => {
 })
 
 // const submitAction = computed(() => this.actionClasses.indexOf('submit-button') !== -1)
-const empty = computed(() => !props.modelValue || (Array.isArray(props.modelValue) && props.modelValue.length === 0))
+const empty = computed(() => modelValue.value === undefined
+  || modelValue.value === ''
+  || (Array.isArray(modelValue.value) && modelValue.value.length === 0))
 const tooltipToShow = computed(() => {
   if (active.value) {
     return false

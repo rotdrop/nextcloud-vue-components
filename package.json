@@ -2,14 +2,18 @@
   "name": "@rotdrop/nextcloud-vue-components",
   "version": "1.0.2",
   "description": "A loose collection of Vue components that I use in several of my projects.",
-  "main": "index.js",
+  "main": "./lib/index.ts",
+  "types": "./lib/index.ts",
+  "files": [
+    "lib",
+    "CHANGELOG.md"
+  ],
   "scripts": {
-    "lint": "eslint --ext .js,.vue lib",
-    "lint:fix": "eslint --ext .js,.vue lib --fix",
-    "stylelint": "stylelint css/*.css css/*.scss lib/**/*.scss lib/**/*.vue",
-    "stylelint:fix": "stylelint css/*.css css/*.scss lib/**/*.scss lib/**/*.vue --fix",
-    "cs:check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
-    "cs:fix": "vendor/bin/php-cs-fixer fix"
+    "lint": "eslint lib",
+    "lint:fix": "eslint lib --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "vue-tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -26,18 +30,35 @@
     "library",
     "javascript"
   ],
+  "peerDependencies": {
+    "@nextcloud/dialogs": "^7.3.0",
+    "@nextcloud/l10n": "^3.4.1",
+    "@nextcloud/paths": "^3.1.0",
+    "@nextcloud/vue": "^9.8.0",
+    "vue": "^3.5.34"
+  },
+  "dependencies": {
+    "floating-vue": "^5.4.0",
+    "uuid": "^14.0.0"
+  },
   "devDependencies": {
-    "@nextcloud/babel-config": "^1.3.0",
     "@nextcloud/dialogs": "^7.3.0",
     "@nextcloud/eslint-config": "^9.0.0-rc.8",
     "@nextcloud/l10n": "^3.4.1",
-    "@nextcloud/paths": "*",
+    "@nextcloud/paths": "^3.1.0",
     "@nextcloud/vue": "^9.8.0",
+    "@types/node": "^24.0.0",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^10.3.0",
+    "jsdom": "^29.0.0",
+    "sass": "^1.100.0",
     "typescript": "^6.0.3",
-    "uuid": "^14.0.0",
-    "vue": "^3.5.34"
+    "vite": "^8.0.0",
+    "vitest": "^5.0.5",
+    "vue": "^3.5.34",
+    "vue-tsc": "^3.3.14"
   },
   "author": "Claus-Justus Heine <himself@claus-justus-heine.de>",
   "license": "AGPL-3.0-or-later",

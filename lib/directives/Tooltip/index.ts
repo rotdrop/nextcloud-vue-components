@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/// <reference path="../../styles.d.ts" />
+
 import { options, vTooltip } from 'floating-vue';
 
 import './index.scss';

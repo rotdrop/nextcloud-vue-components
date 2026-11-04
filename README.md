@@ -89,6 +89,23 @@ Existing code has formatting and documentation-rule debt under that preset;
 lint is not yet a CI gate. The obsolete PHP and unconfigured stylelint scripts
 have been removed.
 
+## TextFieldWithSubmitButton trailing button
+
+The `trailingButton` prop selects one of three modes:
+
+| Value | Behavior |
+| --- | --- |
+| `'submit'` (default) | Shows the existing submit button and emits `submit` with the current model value when clicked. |
+| `'clear'` | Shows a clear button that sets the model to `''` through `update:modelValue`, without emitting `submit`. |
+| `'none'` | Hides the trailing button. |
+
+```vue
+<TextFieldWithSubmitButton v-model="text" trailing-button="clear" />
+```
+
+Editing continues to update the model in every mode. Other `NcTextField`
+attributes, such as `disabled` and `trailingButtonLabel`, are forwarded as before.
+
 ## FilePrefixPicker model
 
 `FilePrefixPicker` synchronizes with `modelValue`, including replacement objects

@@ -27,9 +27,10 @@
       </div>
       <NcTextField v-model="model"
                    v-bind="$attrs"
-                   :showTrailingButton="true"
-                   trailingButtonIcon="arrowEnd"
-                   @trailingButtonClick="$emit('submit', model)"
+                   :class="{ 'submit-button': props.trailingButton === 'submit' }"
+                   :showTrailingButton="props.trailingButton !== 'none'"
+                   :trailingButtonIcon="props.trailingButton === 'submit' ? 'arrowEnd' : 'close'"
+                   @trailingButtonClick="onTrailingButtonClick"
       >
         <!-- pass through slots -->
         <template v-for="(_, slotName) in $slots" #[slotName]="slotData">
@@ -58,18 +59,28 @@ defineOptions({
 const model = defineModel<string|number>({ default: '' })
 
 const props = withDefaults(defineProps<{
+  trailingButton?: 'none'|'submit'|'clear'
   hint?: string
   flexContainerClasses?: string[]
   flexItemClasses?: string[]
 }>(), {
+  trailingButton: 'submit',
   hint: undefined,
   flexContainerClasses: () => ['flex-justify-left', 'flex-align-start'],
   flexItemClasses: () => ['flex-justify-left', 'flex-align-start'],
 })
 
-defineEmits([
+const emit = defineEmits([
   'submit',
 ])
+
+const onTrailingButtonClick = () => {
+  if (props.trailingButton === 'clear') {
+    model.value = ''
+  } else if (props.trailingButton === 'submit') {
+    emit('submit', model.value)
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -78,7 +89,7 @@ defineEmits([
     color: var(--color-text-lighter);
     font-style:italic;
   }
-  // Tweak the submit button of the NcTextField
+  // Tweak the trailing button of the NcTextField
   :deep(.input-field) { // wrapper
     margin-block-start: 0;
     &.input-field--trailing-icon .input-field__input,
@@ -96,13 +107,8 @@ defineEmits([
     .input-field__trailing-button.button-vue--vue-tertiary-no-background {
       max-height: var(--default-clickable-area);
       max-width: var(--default-clickable-area);
-      // FIXME: instead we probably should switch to material design icons for everything else ...
-      background-image: var(--icon-confirm-dark);
       background-position: center;
       background-repeat: no-repeat;
-      .button-vue__icon {
-        opacity: 0;
-      }
       &:hover, &:focus {
         &:not(:disabled) {
           top: 0;
@@ -112,6 +118,13 @@ defineEmits([
           border: 2px solid var(--color-primary-element);
           border-radius: var(--border-radius-large);
           outline: 2px solid var(--color-main-background);
+        }
+      }
+      &.submit-button .input-field__trailing-button.button-vue--vue-tertiary-no-background {
+        // FIXME: instead we probably should switch to material design icons for everything else ...
+        background-image: var(--icon-confirm-dark);
+        .button-vue__icon {
+          opacity: 0;
         }
       }
     }

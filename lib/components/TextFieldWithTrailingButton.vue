@@ -26,6 +26,7 @@
         <slot name="alignedBefore" />
       </div>
       <NcTextField v-model="model"
+                   v-trailing-button-tooltip
                    v-bind="$attrs"
                    :class="{ 'submit-button': props.trailingButton === 'submit' }"
                    :showTrailingButton="props.trailingButton !== 'none'"
@@ -50,6 +51,39 @@
 
 <script setup lang="ts">
 import { NcTextField } from '@nextcloud/vue'
+import type { ObjectDirective } from 'vue'
+import vTooltip from '../directives/Tooltip/index.ts'
+
+const tooltipButtons = new WeakMap<HTMLElement, HTMLButtonElement>()
+
+const updateTrailingButtonTooltip = (element: HTMLElement) => {
+  const previous = tooltipButtons.get(element)
+  const button = element.querySelector<HTMLButtonElement>('.input-field__trailing-button')
+  if (previous && previous !== button) {
+    vTooltip.beforeUnmount(previous)
+    tooltipButtons.delete(element)
+  }
+  if (button) {
+    vTooltip.updated(button, {
+      value: button.getAttribute('aria-label') || false,
+      modifiers: {},
+    })
+    tooltipButtons.set(element, button)
+  }
+}
+
+// NcTextField owns the button, so delegate tooltip lifecycle hooks to that element.
+const vTrailingButtonTooltip: ObjectDirective<HTMLElement> = {
+  mounted: updateTrailingButtonTooltip,
+  updated: updateTrailingButtonTooltip,
+  beforeUnmount(element) {
+    const button = tooltipButtons.get(element)
+    if (button) {
+      vTooltip.beforeUnmount(button)
+      tooltipButtons.delete(element)
+    }
+  },
+}
 
 defineOptions({
   name: 'TextFieldWithTrailingButton',

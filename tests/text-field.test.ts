@@ -1,14 +1,14 @@
-import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { assert, describe, expect, it, vi } from 'vitest'
 import TextFieldWithSubmitButton from '../lib/components/TextFieldWithSubmitButton.vue'
 import TextFieldWithTrailingButton from '../lib/components/TextFieldWithTrailingButton.vue'
+import vTooltip from '../lib/directives/Tooltip/index.ts'
 
 vi.mock('@nextcloud/vue', () => import('./mocks/nextcloud-vue.ts'))
 
 it('keeps the old component import as an alias', () => {
   expect(TextFieldWithSubmitButton).toBe(TextFieldWithTrailingButton)
 })
-
 describe.each([
   ['TextFieldWithTrailingButton', TextFieldWithTrailingButton],
   ['TextFieldWithSubmitButton', TextFieldWithSubmitButton],
@@ -103,5 +103,62 @@ describe.each([
     expect(wrapper.get('input').element.value).toBe('initial')
     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     expect(wrapper.emitted('submit')).toBeUndefined()
+  })
+
+  it('attaches the package tooltip only to the trailing button using its label', async () => {
+    const updateTooltip = vi.spyOn(vTooltip, 'updated')
+    const wrapper = mount(TextField)
+    expect(updateTooltip).toHaveBeenLastCalledWith(wrapper.get('button').element, {
+      value: 'Save changes',
+      modifiers: {},
+    })
+    expect(wrapper.get('button').classes()).toContain('v-popper--has-tooltip')
+    expect(wrapper.get('input').classes()).not.toContain('v-popper--has-tooltip')
+    expect(wrapper.classes()).not.toContain('v-popper--has-tooltip')
+
+    await wrapper.setProps({ trailingButton: 'clear' })
+    expect(updateTooltip).toHaveBeenLastCalledWith(wrapper.get('button').element, {
+      value: 'Clear text',
+      modifiers: {},
+    })
+
+    const customWrapper = mount(TextField, { attrs: { trailingButtonLabel: 'Custom label' } })
+    expect(updateTooltip).toHaveBeenLastCalledWith(customWrapper.get('button').element, {
+      value: 'Custom label',
+      modifiers: {},
+    })
+
+  })
+
+  it('shows the button label on focus', async () => {
+    const wrapper = mount(TextField, {
+      props: { trailingButton: 'clear' },
+      attrs: { trailingButtonLabel: 'Clear this text field' },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    await wrapper.get('button').trigger('focus')
+    await vi.waitFor(() => {
+      const tooltipId = wrapper.get('button').attributes('aria-describedby')
+      assert.isDefined(tooltipId)
+      expect(document.getElementById(tooltipId)?.textContent).toContain('Clear this text field')
+    }, { timeout: 2000 })
+    wrapper.unmount()
+  })
+
+  it('cleans up tooltips when the button is hidden or the component is unmounted', async () => {
+    const destroyTooltip = vi.spyOn(vTooltip, 'beforeUnmount')
+    const wrapper = mount(TextField)
+    const button = wrapper.get('button').element
+    await wrapper.setProps({ trailingButton: 'none' })
+    expect(destroyTooltip).toHaveBeenCalledWith(button)
+    expect(button.classList.contains('v-popper--has-tooltip')).toBe(false)
+
+    await wrapper.setProps({ trailingButton: 'clear' })
+    const newButton = wrapper.get('button').element
+    expect(newButton.classList.contains('v-popper--has-tooltip')).toBe(true)
+    wrapper.unmount()
+    expect(destroyTooltip).toHaveBeenCalledWith(newButton)
+    expect(newButton.classList.contains('v-popper--has-tooltip')).toBe(false)
   })
 })

@@ -110,6 +110,10 @@ The `trailingButton` prop selects one of three modes:
 
 Editing continues to update the model in every mode. Other `NcTextField`
 attributes, such as `disabled` and `trailingButtonLabel`, are forwarded as before.
+The trailing button also shows a tooltip on hover or focus using this package's
+`v-tooltip` directive. Its text matches the button's accessible label (Nextcloud's
+translated "Save changes" or "Clear text" by default). Set `trailingButtonLabel`
+to customize both the accessible label and tooltip.
 
 ## FilePrefixPicker model
 

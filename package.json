@@ -65,5 +65,9 @@
   "bugs": {
     "url": "https://github.com/rotdrop/nextcloud-vue-components/issues"
   },
-  "homepage": "https://github.com/rotdrop/nextcloud-vue-components#readme"
+  "homepage": "https://github.com/rotdrop/nextcloud-vue-components#readme",
+  "allowScripts": {
+    "@parcel/watcher": true,
+    "core-js@": true
+  }
 }

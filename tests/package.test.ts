@@ -19,9 +19,12 @@ describe('source-only package', () => {
     expect(paths).toContain('lib/components/FilePrefixPicker.vue')
     expect(paths).toContain('lib/directives/Tooltip/index.scss')
     expect(paths).toContain('lib/util/color.ts')
+    expect(manifest.bin['nextcloud-vue-components']).toBe('./bin/nextcloud-vue-components.mjs')
+    expect(paths).toContain('bin/nextcloud-vue-components.mjs')
     expect(paths.every((path: string) => path.startsWith('lib/')
+      || path === 'bin/nextcloud-vue-components.mjs'
       || ['package.json', 'README.md', 'LICENSE', 'CHANGELOG.md'].includes(path))).toBe(true)
-    expect(paths.some((path: string) => /\.(js|mjs|cjs)$/.test(path))).toBe(false)
+    expect(paths.some((path: string) => path.startsWith('lib/') && /\.(js|mjs|cjs)$/.test(path))).toBe(false)
   })
 
   it('can compile the public entry point with a consumer Vue/TypeScript/Sass toolchain', async () => {

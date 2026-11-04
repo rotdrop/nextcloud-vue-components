@@ -1,10 +1,18 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import TextField from '../lib/components/TextFieldWithSubmitButton.vue'
+import TextFieldWithSubmitButton from '../lib/components/TextFieldWithSubmitButton.vue'
+import TextFieldWithTrailingButton from '../lib/components/TextFieldWithTrailingButton.vue'
 
 vi.mock('@nextcloud/vue', () => import('./mocks/nextcloud-vue.ts'))
 
-describe('TextFieldWithSubmitButton', () => {
+it('keeps the old component import as an alias', () => {
+  expect(TextFieldWithSubmitButton).toBe(TextFieldWithTrailingButton)
+})
+
+describe.each([
+  ['TextFieldWithTrailingButton', TextFieldWithTrailingButton],
+  ['TextFieldWithSubmitButton', TextFieldWithSubmitButton],
+] as const)('%s', (_name, TextField) => {
   it('forwards attributes and slots to the text field', () => {
     const wrapper = mount(TextField, {
       props: { modelValue: 'initial', hint: 'A hint' },

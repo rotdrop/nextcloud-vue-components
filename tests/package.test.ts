@@ -17,6 +17,8 @@ describe('source-only package', () => {
     expect(paths).toContain(manifest.main.replace(/^\.\//, ''))
     expect(paths).toContain(manifest.types.replace(/^\.\//, ''))
     expect(paths).toContain('lib/components/FilePrefixPicker.vue')
+    expect(paths).toContain('lib/components/TextFieldWithTrailingButton.vue')
+    expect(paths).toContain('lib/components/TextFieldWithSubmitButton.vue')
     expect(paths).toContain('lib/directives/Tooltip/index.scss')
     expect(paths).toContain('lib/util/color.ts')
     expect(paths.every((path: string) => path.startsWith('lib/')
@@ -48,7 +50,7 @@ describe('source-only package', () => {
     if (entry?.type === 'chunk') {
       expect(entry.exports).toEqual(expect.arrayContaining([
         'ColorPickerExtension', 'DynamicSvgIcon', 'FilePrefixPicker',
-        'SelectWithSubmitButton', 'TextFieldWithSubmitButton', 'Color', 'Tooltip',
+        'SelectWithSubmitButton', 'TextFieldWithSubmitButton', 'TextFieldWithTrailingButton', 'Color', 'Tooltip',
       ]))
       expect(entry.code).toContain('APP_NAME')
     }

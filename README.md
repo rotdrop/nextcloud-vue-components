@@ -28,7 +28,7 @@ dependencies.
 Import from the package root or keep using the existing source paths:
 
 ```ts
-import { TextFieldWithSubmitButton, Color } from '@rotdrop/nextcloud-vue-components'
+import { TextFieldWithTrailingButton, Color } from '@rotdrop/nextcloud-vue-components'
 import FilePrefixPicker from '@rotdrop/nextcloud-vue-components/lib/components/FilePrefixPicker.vue'
 ```
 
@@ -89,7 +89,12 @@ Existing code has formatting and documentation-rule debt under that preset;
 lint is not yet a CI gate. The obsolete PHP and unconfigured stylelint scripts
 have been removed.
 
-## TextFieldWithSubmitButton trailing button
+## TextFieldWithTrailingButton
+
+`TextFieldWithSubmitButton` remains an alias of `TextFieldWithTrailingButton`,
+both in package-root exports and at the existing
+`lib/components/TextFieldWithSubmitButton.vue` import path. Existing props,
+events, slots, and default submit behavior are unchanged.
 
 The `trailingButton` prop selects one of three modes:
 
@@ -100,7 +105,7 @@ The `trailingButton` prop selects one of three modes:
 | `'none'` | Hides the trailing button. |
 
 ```vue
-<TextFieldWithSubmitButton v-model="text" trailing-button="clear" />
+<TextFieldWithTrailingButton v-model="text" trailing-button="clear" />
 ```
 
 Editing continues to update the model in every mode. Other `NcTextField`

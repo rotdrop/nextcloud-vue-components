@@ -1,10 +1,18 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import TextField from '../lib/components/TextFieldWithSubmitButton.vue'
+import TextFieldWithSubmitButton from '../lib/components/TextFieldWithSubmitButton.vue'
+import TextFieldWithTrailingButton from '../lib/components/TextFieldWithTrailingButton.vue'
 
 vi.mock('@nextcloud/vue', () => import('./mocks/nextcloud-vue.ts'))
 
-describe('TextFieldWithSubmitButton', () => {
+it('keeps the old component import as an alias', () => {
+  expect(TextFieldWithSubmitButton).toBe(TextFieldWithTrailingButton)
+})
+
+describe.each([
+  ['TextFieldWithTrailingButton', TextFieldWithTrailingButton],
+  ['TextFieldWithSubmitButton', TextFieldWithSubmitButton],
+] as const)('%s', (_name, TextField) => {
   it('forwards attributes and slots to the text field', () => {
     const wrapper = mount(TextField, {
       props: { modelValue: 'initial', hint: 'A hint' },
@@ -21,6 +29,11 @@ describe('TextFieldWithSubmitButton', () => {
 
   it('emits one model update per edit and submits the edited value', async () => {
     const wrapper = mount(TextField, { props: { modelValue: 'initial' } })
+    expect(wrapper.getComponent({ name: 'NcTextField' }).props()).toMatchObject({
+      showTrailingButton: true,
+      trailingButtonIcon: 'arrowEnd',
+    })
+    expect(wrapper.getComponent({ name: 'NcTextField' }).classes()).toContain('submit-button')
     await wrapper.get('input').setValue('edited')
     expect(wrapper.emitted('update:modelValue')).toEqual([['edited']])
     await wrapper.get('button').trigger('click')
@@ -38,5 +51,57 @@ describe('TextFieldWithSubmitButton', () => {
   it('starts empty when no model is supplied', () => {
     const wrapper = mount(TextField)
     expect(wrapper.get('input').element.value).toBe('')
+  })
+
+  it.each(['text', 0, 42])('clears %s without submitting', async (modelValue) => {
+    const wrapper = mount(TextField, { props: { modelValue, trailingButton: 'clear' } })
+    const field = wrapper.getComponent({ name: 'NcTextField' })
+    expect(field.props()).toMatchObject({ showTrailingButton: true, trailingButtonIcon: 'close' })
+    expect(field.classes()).not.toContain('submit-button')
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.get('input').element.value).toBe('')
+    expect(wrapper.emitted('update:modelValue')).toEqual([['']])
+    expect(wrapper.emitted('submit')).toBeUndefined()
+  })
+
+  it('can clear an uncontrolled model and continue editing', async () => {
+    const wrapper = mount(TextField, { props: { trailingButton: 'clear' } })
+    await wrapper.get('input').setValue('edited')
+    await wrapper.get('button').trigger('click')
+    await wrapper.get('input').setValue('new text')
+    expect(wrapper.get('input').element.value).toBe('new text')
+    expect(wrapper.emitted('update:modelValue')).toEqual([['edited'], [''], ['new text']])
+    expect(wrapper.emitted('submit')).toBeUndefined()
+  })
+
+  it('hides the trailing button without affecting model updates', async () => {
+    const wrapper = mount(TextField, { props: { modelValue: 'initial', trailingButton: 'none' } })
+    expect(wrapper.find('button').exists()).toBe(false)
+    await wrapper.get('input').setValue('edited')
+    expect(wrapper.emitted('update:modelValue')).toEqual([['edited']])
+    expect(wrapper.emitted('submit')).toBeUndefined()
+  })
+
+  it('switches between trailing button modes', async () => {
+    const wrapper = mount(TextField, { props: { modelValue: 'initial', trailingButton: 'none' } })
+    await wrapper.setProps({ trailingButton: 'clear' })
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.emitted('update:modelValue')).toEqual([['']])
+    await wrapper.setProps({ trailingButton: 'submit', modelValue: 'replacement' })
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.emitted('submit')).toEqual([['replacement']])
+    await wrapper.setProps({ trailingButton: 'none' })
+    expect(wrapper.find('button').exists()).toBe(false)
+  })
+
+  it('does not clear a disabled field', async () => {
+    const wrapper = mount(TextField, {
+      props: { modelValue: 'initial', trailingButton: 'clear' },
+      attrs: { disabled: true },
+    })
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.get('input').element.value).toBe('initial')
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    expect(wrapper.emitted('submit')).toBeUndefined()
   })
 })

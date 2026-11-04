@@ -28,7 +28,7 @@ dependencies.
 Import from the package root or keep using the existing source paths:
 
 ```ts
-import { TextFieldWithSubmitButton, Color } from '@rotdrop/nextcloud-vue-components'
+import { TextFieldWithTrailingButton, Color } from '@rotdrop/nextcloud-vue-components'
 import FilePrefixPicker from '@rotdrop/nextcloud-vue-components/lib/components/FilePrefixPicker.vue'
 ```
 
@@ -88,6 +88,28 @@ not pin dependencies for applications installing the published library.
 Existing code has formatting and documentation-rule debt under that preset;
 lint is not yet a CI gate. The obsolete PHP and unconfigured stylelint scripts
 have been removed.
+
+## TextFieldWithTrailingButton
+
+`TextFieldWithSubmitButton` remains an alias of `TextFieldWithTrailingButton`,
+both in package-root exports and at the existing
+`lib/components/TextFieldWithSubmitButton.vue` import path. Existing props,
+events, slots, and default submit behavior are unchanged.
+
+The `trailingButton` prop selects one of three modes:
+
+| Value | Behavior |
+| --- | --- |
+| `'submit'` (default) | Shows the existing submit button and emits `submit` with the current model value when clicked. |
+| `'clear'` | Shows a clear button that sets the model to `''` through `update:modelValue`, without emitting `submit`. |
+| `'none'` | Hides the trailing button. |
+
+```vue
+<TextFieldWithTrailingButton v-model="text" trailing-button="clear" />
+```
+
+Editing continues to update the model in every mode. Other `NcTextField`
+attributes, such as `disabled` and `trailingButtonLabel`, are forwarded as before.
 
 ## FilePrefixPicker model
 

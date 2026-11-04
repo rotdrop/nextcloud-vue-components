@@ -64,6 +64,18 @@ describe.each([
     expect(wrapper.emitted('submit')).toBeUndefined()
   })
 
+  it('keeps the clear icon visible for search inputs', () => {
+    const wrapper = mount(TextField, {
+      props: { trailingButton: 'clear' },
+      attrs: { type: 'search' },
+    })
+    const field = wrapper.getComponent({ name: 'NcTextField' })
+
+    expect(field.classes()).toContain('search-clear-button')
+    expect(wrapper.get('input').attributes('type')).toBe('search')
+    expect(wrapper.get('button').text()).toBe('')
+  })
+
   it('can clear an uncontrolled model and continue editing', async () => {
     const wrapper = mount(TextField, { props: { trailingButton: 'clear' } })
     await wrapper.get('input').setValue('edited')

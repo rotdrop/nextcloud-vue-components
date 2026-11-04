@@ -37,7 +37,7 @@ import FilePrefixPicker from '@rotdrop/nextcloud-vue-components/lib/components/F
 Publishing source code is valid npm practice. This package intentionally ships
 Vue single-file components, TypeScript, and SCSS, without generated JavaScript,
 CSS, or declaration bundles. There is no build, `prepare`, or `prepack` step.
-The `files` allowlist includes `lib/`; npm also includes the package manifest,
+The `files` allowlist includes `lib/` and the `bin/` translation extractor; npm also includes the package manifest,
 README, and license. The changelog is included explicitly in the package manifest.
 Tests, CI configuration, and the development lockfile are not published.
 
@@ -62,6 +62,37 @@ define: {
 The Nextcloud browser environment, theme variables, and icon styles must also be
 provided by the host application. Styles imported by the components/directive
 are handled by the host bundler.
+
+## Extracting translation strings
+
+When this library is installed as a node module, the application's translation
+service may not scan its sources. Generate a dummy JavaScript file inside the
+application's translation-scanned source tree:
+
+```sh
+npx @rotdrop/nextcloud-vue-components extract-l10n-strings src/library-l10n.js
+# Or, from an npm script:
+nextcloud-vue-components extract-l10n-strings src/library-l10n.js
+```
+
+The package installs `nextcloud-vue-components` in `node_modules/.bin/`.
+The command takes exactly one destination file, relative to the working
+directory, and overwrites it. Its parent directory must already exist.
+It reads the installed package's sources, regardless of the working directory.
+
+The generated file contains `t(appName, "...")` calls (and `n(appName, "...",
+"...", 1)` for plurals) for the consuming application's translation extractor.
+Only calls using `appName` are included; Nextcloud `core` translations are
+excluded. Duplicate strings are emitted once, with `// TRANSLATORS:` comments
+identifying their package source files and the generating command. Vue templates
+and scripts, JavaScript, and TypeScript sources are scanned. Dynamic translation
+strings and parse or write errors cause a nonzero exit status.
+
+**Do not import or execute the generated file.** It is extraction input, not
+runtime code; `appName` deliberately remains a placeholder, as in the library
+sources. Include it in the application's normal translation extraction so the
+strings enter that application's catalog. Regenerate it when updating this
+package. The application's build-system integration is left to the consumer.
 
 ## Development
 

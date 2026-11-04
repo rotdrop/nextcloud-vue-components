@@ -28,7 +28,7 @@
       <NcTextField v-model="model"
                    v-trailing-button-tooltip="props.trailingButtonTooltip"
                    v-bind="$attrs"
-                   :class="{ 'submit-button': props.trailingButton === 'submit' }"
+                   :class="{ 'submit-button': props.trailingButton === 'submit', 'search-clear-button': props.trailingButton === 'clear' && $attrs.type === 'search' }"
                    :showTrailingButton="props.trailingButton !== 'none'"
                    :trailingButtonIcon="props.trailingButton === 'submit' ? 'arrowEnd' : 'close'"
                    @trailingButtonClick="onTrailingButtonClick"
@@ -163,6 +163,17 @@ const onTrailingButtonClick = () => {
       .button-vue__icon {
         opacity: 0;
       }
+    }
+    &.search-clear-button .input-field__trailing-button::after {
+      content: '×';
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--color-main-text);
+      font-size: 20px;
+      line-height: 1;
+      pointer-events: none;
     }
   }
   :deep(.alignment-wrapper) {

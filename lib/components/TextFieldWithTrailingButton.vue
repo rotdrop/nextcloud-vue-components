@@ -26,7 +26,7 @@
         <slot name="alignedBefore" />
       </div>
       <NcTextField v-model="model"
-                   v-trailing-button-tooltip
+                   v-trailing-button-tooltip="props.trailingButtonTooltip"
                    v-bind="$attrs"
                    :class="{ 'submit-button': props.trailingButton === 'submit' }"
                    :showTrailingButton="props.trailingButton !== 'none'"
@@ -51,14 +51,14 @@
 
 <script setup lang="ts">
 import { NcTextField } from '@nextcloud/vue'
-import type { ObjectDirective } from 'vue'
+import type { DirectiveBinding, ObjectDirective } from 'vue'
 import vTooltip from '../directives/Tooltip/index.ts'
 
 const tooltipButtons = new WeakMap<HTMLElement, HTMLButtonElement>()
 
-const updateTrailingButtonTooltip = (element: HTMLElement) => {
+const updateTrailingButtonTooltip = (element: HTMLElement, { value: enabled }: DirectiveBinding<boolean>) => {
   const previous = tooltipButtons.get(element)
-  const button = element.querySelector<HTMLButtonElement>('.input-field__trailing-button')
+  const button = enabled ? element.querySelector<HTMLButtonElement>('.input-field__trailing-button') : null
   if (previous && previous !== button) {
     vTooltip.beforeUnmount(previous)
     tooltipButtons.delete(element)
@@ -73,7 +73,7 @@ const updateTrailingButtonTooltip = (element: HTMLElement) => {
 }
 
 // NcTextField owns the button, so delegate tooltip lifecycle hooks to that element.
-const vTrailingButtonTooltip: ObjectDirective<HTMLElement> = {
+const vTrailingButtonTooltip: ObjectDirective<HTMLElement, boolean> = {
   mounted: updateTrailingButtonTooltip,
   updated: updateTrailingButtonTooltip,
   beforeUnmount(element) {
@@ -94,11 +94,13 @@ const model = defineModel<string|number>({ default: '' })
 
 const props = withDefaults(defineProps<{
   trailingButton?: 'none'|'submit'|'clear'
+  trailingButtonTooltip?: boolean
   hint?: string
   flexContainerClasses?: string[]
   flexItemClasses?: string[]
 }>(), {
   trailingButton: 'submit',
+  trailingButtonTooltip: true, // eslint-disable-line vue/no-boolean-default
   hint: undefined,
   flexContainerClasses: () => ['flex-justify-left', 'flex-align-start'],
   flexItemClasses: () => ['flex-justify-left', 'flex-align-start'],

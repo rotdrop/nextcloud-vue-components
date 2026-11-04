@@ -146,6 +146,30 @@ describe.each([
     wrapper.unmount()
   })
 
+  it('can disable the tooltip without changing the button label or action', async () => {
+    const updateTooltip = vi.spyOn(vTooltip, 'updated')
+    const wrapper = mount(TextField, {
+      props: { modelValue: 'text', trailingButton: 'clear', trailingButtonTooltip: false },
+    })
+    expect(updateTooltip).not.toHaveBeenCalled()
+    expect(wrapper.get('button').classes()).not.toContain('v-popper--has-tooltip')
+    expect(wrapper.get('button').attributes('aria-label')).toBe('Clear text')
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.emitted('update:modelValue')).toEqual([['']])
+  })
+
+  it('can toggle the tooltip at runtime', async () => {
+    const destroyTooltip = vi.spyOn(vTooltip, 'beforeUnmount')
+    const wrapper = mount(TextField)
+    const button = wrapper.get('button').element
+    await wrapper.setProps({ trailingButtonTooltip: false })
+    expect(destroyTooltip).toHaveBeenCalledWith(button)
+    expect(button.classList.contains('v-popper--has-tooltip')).toBe(false)
+    await wrapper.setProps({ trailingButton: 'clear', trailingButtonTooltip: true })
+    expect(button.classList.contains('v-popper--has-tooltip')).toBe(true)
+    expect(button.getAttribute('aria-label')).toBe('Clear text')
+  })
+
   it('cleans up tooltips when the button is hidden or the component is unmounted', async () => {
     const destroyTooltip = vi.spyOn(vTooltip, 'beforeUnmount')
     const wrapper = mount(TextField)

@@ -114,6 +114,9 @@ The trailing button also shows a tooltip on hover or focus using this package's
 `v-tooltip` directive. Its text matches the button's accessible label (Nextcloud's
 translated "Save changes" or "Clear text" by default). Set `trailingButtonLabel`
 to customize both the accessible label and tooltip.
+The boolean `trailingButtonTooltip` prop defaults to `true`. Set
+`:trailing-button-tooltip="false"` to disable the tooltip without changing the
+button's accessible label or action.
 
 ## FilePrefixPicker model
 

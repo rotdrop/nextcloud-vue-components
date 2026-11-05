@@ -76,9 +76,27 @@ nextcloud-vue-components extract-l10n-strings src/library-l10n.js
 ```
 
 The package installs `nextcloud-vue-components` in `node_modules/.bin/`.
-The command takes exactly one destination file, relative to the working
+The command takes a destination file, relative to the working
 directory, and overwrites it. Its parent directory must already exist.
 It reads the installed package's sources, regardless of the working directory.
+
+Optionally pass an exclude file as the second argument, for example the
+consuming application's `.l10nignore`:
+
+```sh
+nextcloud-vue-components extract-l10n-strings src/library-l10n.js .l10nignore
+```
+
+Both arguments are resolved relative to the working directory. The exclude file
+contains one path per line; blank lines and lines starting with `#` are ignored,
+and surrounding whitespace is trimmed. Entries must identify exact files using
+`@rotdrop/nextcloud-vue-components/lib/` followed by their package-local path.
+Any leading directory path is ignored, so
+`node_modules/@rotdrop/nextcloud-vue-components/lib/components/FilePrefixPicker.vue`
+excludes that component. Unrelated entries are ignored; globbing, directory
+exclusions, and negation are not supported. Excluded files are not parsed, and
+strings shared with included files are still emitted. An unreadable exclude
+file causes a nonzero exit status without overwriting the destination.
 
 The generated file contains `t(appName, "...")` calls (and `n(appName, "...",
 "...", 1)` for plurals) for the consuming application's translation extractor.

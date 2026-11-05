@@ -3,7 +3,7 @@ import { parse } from '@babel/parser'
 import { spawnSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -34,6 +34,7 @@ function fixture(files: Record<string, string>) {
   copyFileSync(cli, join(directory, 'bin/nextcloud-vue-components.mjs'))
   symlinkSync(join(root, 'node_modules'), join(directory, 'node_modules'), 'dir')
   for (const [file, contents] of Object.entries(files)) {
+    mkdirSync(dirname(join(directory, 'lib', file)), { recursive: true })
     writeFileSync(join(directory, 'lib', file), contents)
   }
   return directory
@@ -144,10 +145,66 @@ describe('translation extraction CLI', () => {
     expect(calls(readFileSync(join(directory, 'output.js'), 'utf8'))).toHaveLength(19)
   })
 
+  it('excludes exact package files from an app l10nignore, ignoring leading paths and unrelated entries', () => {
+    const directory = fixture({
+      'bare.ts': "t(appName, 'Bare');",
+      'components/prefixed.vue': "<template>{{ t(appName, 'Prefixed') }}</template>",
+      'absolute.js': "t(appName, 'Absolute');",
+      'shared.ts': "t(appName, 'Shared');",
+      'kept.ts': "t(appName, 'Shared'); t(appName, 'Kept');",
+    })
+    const app = temporaryDirectory()
+    writeFileSync(join(app, '.l10nignore'), [
+      '',
+      '# @rotdrop/nextcloud-vue-components/lib/kept.ts',
+      '  @rotdrop/nextcloud-vue-components/lib/bare.ts  ',
+      'node_modules/@rotdrop/nextcloud-vue-components/lib/components/prefixed.vue',
+      '/some/app/node_modules/@rotdrop/nextcloud-vue-components/lib/absolute.js',
+      './node_modules/@rotdrop/nextcloud-vue-components/lib/shared.ts',
+      'vendor/',
+      'lib/kept.ts',
+      'node_modules/@someone/nextcloud-vue-components/lib/kept.ts',
+      'not-@rotdrop/nextcloud-vue-components/lib/kept.ts',
+      '@rotdrop/nextcloud-vue-components/lib/*.ts',
+      '@rotdrop/nextcloud-vue-components/lib/',
+      '@rotdrop/nextcloud-vue-components/lib/missing.ts',
+      '',
+    ].join('\r\n'))
+    const result = run(['extract-l10n-strings', 'output.js', '.l10nignore'], app,
+      join(directory, 'bin/nextcloud-vue-components.mjs'))
+    expect(result.status, result.stderr).toBe(0)
+    const output = readFileSync(join(app, 'output.js'), 'utf8')
+    expect(calls(output)).toEqual([['Shared'], ['Kept']])
+    expect(output).toContain('/lib/kept.ts:1')
+    expect(output).not.toContain('/lib/shared.ts')
+  })
+
+  it('skips excluded files before parsing and supports excluding every source', () => {
+    const directory = fixture({ 'broken.ts': 'This is not valid TypeScript.' })
+    const excludeFile = join(directory, '.l10nignore')
+    writeFileSync(excludeFile, '@rotdrop/nextcloud-vue-components/lib/broken.ts\n')
+    const result = run(['extract-l10n-strings', 'output.js', excludeFile], directory,
+      join(directory, 'bin/nextcloud-vue-components.mjs'))
+    expect(result.status, result.stderr).toBe(0)
+    expect(calls(readFileSync(join(directory, 'output.js'), 'utf8'))).toEqual([])
+  })
+
+  it('reports an unreadable exclude file without overwriting the destination', () => {
+    const directory = temporaryDirectory()
+    writeFileSync(join(directory, 'output.js'), 'previous contents')
+    const result = run(['extract-l10n-strings', 'output.js', 'missing.l10nignore'], directory)
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('ENOENT')
+    expect(result.stderr).toContain('missing.l10nignore')
+    expect(readFileSync(join(directory, 'output.js'), 'utf8')).toBe('previous contents')
+  })
+
   it.each([
     [],
     ['extract-l10n-strings'],
-    ['extract-l10n-strings', 'output.js', 'extra'],
+    ['extract-l10n-strings', 'output.js', '.l10nignore', 'extra'],
+    ['extract-l10n-strings', 'output.js', ''],
+    ['extract-l10n-strings', ''],
     ['unknown', 'output.js'],
   ])('rejects invalid arguments: %j', (...args) => {
     const directory = temporaryDirectory()
@@ -188,6 +245,10 @@ describe('translation extraction CLI', () => {
     const sourceFile = run(['extract-l10n-strings', 'lib/a.js'], directory, executable)
     expect(sourceFile.status).toBe(1)
     expect(sourceFile.stderr).toContain('must not overwrite')
+    writeFileSync(join(directory, '.l10nignore'), '@rotdrop/nextcloud-vue-components/lib/a.js')
+    const excludedSourceFile = run(['extract-l10n-strings', 'lib/a.js', '.l10nignore'], directory, executable)
+    expect(excludedSourceFile.status).toBe(1)
+    expect(excludedSourceFile.stderr).toContain('must not overwrite')
     expect(readFileSync(join(directory, 'lib/a.js'), 'utf8')).toBe("t(appName, 'Label')")
   })
 })

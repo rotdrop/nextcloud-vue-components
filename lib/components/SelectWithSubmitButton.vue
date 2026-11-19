@@ -1,6 +1,6 @@
 <!--
  - @author Claus-Justus Heine
- - @copyright 2024, 2025, 2026 Claus-Justus Heine <himself@claus-justus-heine.de>
+ - @copyright 2024-2026 Claus-Justus Heine <himself@claus-justus-heine.de>
  - @license AGPL-3.0-or-later
  -
  - This program is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@
       <div v-if="$slots.alignedBefore" class="aligned-before, " :class="[...flexItemClasses]">
         <slot name="alignedBefore" />
       </div>
-      <div class="select-combo-wrapper" :class="[{ loading, actions: $slots.actions || clearAction || resetAction, submit: submitButton }, ...flexItemClasses, ...actionClasses]">
+      <div class="select-combo-wrapper" :class="[{ loading, clearable: props.clearable, actions: $slots.actions || clearAction || resetAction, submit: submitButton }, ...flexItemClasses, ...actionClasses]">
         <NcSelect ref="ncSelect"
                   v-bind="$attrs"
                   v-model="modelValue"
@@ -314,10 +314,16 @@ const clearSelection = () => {
       max-width:100%;
       margin: 0 0 0;
     }
+    &:not(.clearable) :deep(.v-select.select) {
+      :vs__selected {
+        padding-inline-end: var(--default-clickable-area);
+      }
+    }
     &.submit-button :deep(.v-select.select) {
       .vs__dropdown-toggle {
-        // substract the round borders for the overlay
-        padding-right: calc(var(--default-clickable-area) - var(--vs-border-radius));
+        .vs__actions {
+          inset-inline-end: calc(var(--default-clickable-area) - 8px);
+        }
       }
       + .select-with-submit-button.icon-confirm {
         flex-shrink: 0;

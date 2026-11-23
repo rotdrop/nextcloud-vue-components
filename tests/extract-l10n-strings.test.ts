@@ -133,6 +133,20 @@ describe('translation extraction CLI', () => {
     expect(output).not.toMatch(/Core template|Core script|Other app|Comment template|Comment script|String example|CSS/)
   })
 
+  it('writes single-quoted literals while preserving quotes, backslashes, and control characters', () => {
+    const singular = `It's "quoted" with \\ and \\" and \\'\nnext line\t\u0000`
+    const plural = `Files' "names" \\`
+    const directory = fixture({
+      'quotes.js': `t(appName, ${JSON.stringify(singular)});\nn(appName, ${JSON.stringify(singular)}, ${JSON.stringify(plural)}, count);`,
+    })
+    const result = run(['extract-l10n-strings', 'output.js'], directory, join(directory, 'bin/nextcloud-vue-components.mjs'))
+    expect(result.status, result.stderr).toBe(0)
+    const output = readFileSync(join(directory, 'output.js'), 'utf8')
+    expect(calls(output)).toEqual([[singular], [singular, plural, 1]])
+    expect(output).toContain(`t(appName, 'It\\'s "quoted" with \\\\ and \\\\" and \\\\\\'\\nnext line\\t\\u0000');`)
+    expect(output).toContain(`, 'Files\\' "names" \\\\', 1);`)
+  })
+
   it('works through the installed executable symlink', () => {
     const directory = temporaryDirectory()
     const executable = join(directory, 'nextcloud-vue-components')

@@ -46,12 +46,18 @@ import sanitzeSVG from '../util/sanitize-inline-svg.ts'
 
 const props = withDefaults(
   defineProps<{
+    /** Overall SVG icon size in pixels. */
     size?: number
+    /** Rendered SVG width in pixels. */
     width?: number
+    /** Rendered SVG height in pixels. */
     height?: number
+    /** SVG viewBox coordinates. */
     viewBox?: [number, number, number, number]
+    /** Accessible title for the SVG icon. */
     title?: string
-    data: string // the svg image data
+    /** SVG markup or image data to render. */
+    data: string
   }>(),
   {
     size: undefined,

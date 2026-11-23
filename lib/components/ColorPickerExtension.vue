@@ -99,8 +99,11 @@ defineOptions({
 
 const props = withDefaults(
   defineProps<{
+    /** Currently selected color as a hexadecimal string. */
     modelValue?: string
+    /** Text displayed on the color-picker trigger button. */
     label?: string
+    /** Labels for the color-picker actions. */
     componentLabels?: {
       openColorPicker: string
       submitColorChoice: string
@@ -108,6 +111,7 @@ const props = withDefaults(
       revertColorPalette: string
       resetColorPalette: string
     }
+    /** Colors available in the picker palette. */
     colorPalette?: RGBColor[]
   }>(),
   {

@@ -1,140 +1,188 @@
 #!/usr/bin/env node
-import { parse as parseJavaScript } from '@babel/parser'
-import { compileTemplate, parse as parseVue } from '@vue/compiler-sfc'
-import { readdir, readFile, writeFile } from 'node:fs/promises'
-import { join, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { parse as parseJavaScript } from '@babel/parser';
+import { compileTemplate, parse as parseVue } from '@vue/compiler-sfc';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { join, relative, resolve } from 'node:path';
+import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
-const packageRoot = fileURLToPath(new URL('../', import.meta.url))
-const packageName = '@rotdrop/nextcloud-vue-components'
-const command = 'nextcloud-vue-components extract-l10n-strings'
-const usage = `Usage: ${command} <destination.js> [exclude-file]`
+const packageRoot = fileURLToPath(new URL('../', import.meta.url));
+const packageName = '@rotdrop/nextcloud-vue-components';
+const command = 'nextcloud-vue-components extract-l10n-strings';
+const usage = `Usage: ${command} <destination.js> [exclude-file]`;
 const functions = new Map([
   ['t', 1],
   ['translate', 1],
   ['n', 2],
   ['translatePlural', 2],
-])
+]);
 
+/**
+ * Return the identifier represented by a Babel node.
+ *
+ * @param {object|null|undefined} node - Babel expression node to inspect.
+ * @return {string|undefined} The identifier name, if present.
+ */
 function identifier(node) {
   if (node?.type === 'Identifier') {
-    return node.name.startsWith('_ctx.') ? node.name.slice(5) : node.name
+    return node.name.startsWith('_ctx.') ? node.name.slice(5) : node.name;
   }
   if (node?.type === 'MemberExpression' && !node.computed
     && node.object.type === 'Identifier' && node.object.name === '_ctx'
     && node.property.type === 'Identifier') {
-    return node.property.name
+    return node.property.name;
   }
 }
 
+/**
+ * Visit every node in an AST subtree.
+ *
+ * @param {object|object[]|null} node - AST node or collection of nodes.
+ * @param {(node: object) => void} callback - Function called for each visited node.
+ */
 function visit(node, callback) {
   if (!node || typeof node !== 'object') {
-    return
+    return;
   }
   if (Array.isArray(node)) {
-    node.forEach((child) => visit(child, callback))
-    return
+    node.forEach((child) => visit(child, callback));
+    return;
   }
-  callback(node)
+  callback(node);
   for (const [key, value] of Object.entries(node)) {
     if (key !== 'loc' && key !== 'tokens' && key !== 'comments') {
-      visit(value, callback)
+      visit(value, callback);
     }
   }
 }
 
+/**
+ * Read a statically defined string from a Babel node.
+ *
+ * @param {object|null|undefined} node - Babel node containing the literal.
+ * @return {string} The literal string value.
+ */
 function literal(node) {
   if (node?.type === 'StringLiteral') {
-    return node.value
+    return node.value;
   }
   if (node?.type === 'TemplateLiteral' && node.expressions.length === 0) {
-    return node.quasis[0].value.cooked
+    return node.quasis[0].value.cooked;
   }
-  throw new Error('appName translations must use static string literals')
+  throw new Error('appName translations must use static string literals');
 }
 
+/**
+ * Extract translation calls from an AST and record their source locations.
+ *
+ * @param {object} ast - AST to inspect.
+ * @param {string} source - Relative source file path.
+ * @param {Map} entries - Collected translations and source locations.
+ * @param {number} [lineOffset] - Number of lines preceding the AST source.
+ */
 function extractAst(ast, source, entries, lineOffset = 0) {
   visit(ast, (node) => {
     if (node.type !== 'CallExpression' || identifier(node.arguments[0]) !== 'appName') {
-      return
+      return;
     }
-    const count = functions.get(identifier(node.callee))
+    const count = functions.get(identifier(node.callee));
     if (!count) {
-      return
+      return;
     }
-    const strings = Array.from({ length: count }, (_, index) => literal(node.arguments[index + 1]))
-    const key = JSON.stringify(strings)
+    const strings = Array.from({ length: count }, (_, index) => literal(node.arguments[index + 1]));
+    const key = JSON.stringify(strings);
     if (!entries.has(key)) {
-      entries.set(key, { strings, sources: new Map() })
+      entries.set(key, { strings, sources: new Map() });
     }
     if (!entries.get(key).sources.has(source)) {
-      entries.get(key).sources.set(source, new Set())
+      entries.get(key).sources.set(source, new Set());
     }
-    entries.get(key).sources.get(source).add(node.loc.start.line + lineOffset)
-  })
+    entries.get(key).sources.get(source).add(node.loc.start.line + lineOffset);
+  });
 }
 
+/**
+ * Parse source code and extract translation calls.
+ *
+ * @param {string} code - Source code to parse.
+ * @param {string} source - Relative source file path.
+ * @param {Map} entries - Collected translations and source locations.
+ * @param {boolean} [jsx] - Whether to enable JSX parsing.
+ * @param {number} [lineOffset] - Number of lines preceding the source.
+ */
 function extract(code, source, entries, jsx = false, lineOffset = 0) {
   const ast = parseJavaScript(code, {
     sourceType: 'unambiguous',
     plugins: jsx ? ['typescript', 'jsx'] : ['typescript'],
-  })
-  extractAst(ast, source, entries, lineOffset)
+  });
+  extractAst(ast, source, entries, lineOffset);
 }
 
+/**
+ * Recursively collect supported source files.
+ *
+ * @param {string} directory - Directory to search.
+ * @return {Promise<string[]>} Sorted paths of supported source files.
+ */
 async function collect(directory) {
-  const files = []
+  const files = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const path = join(directory, entry.name)
+    const path = join(directory, entry.name);
     if (entry.isDirectory()) {
-      files.push(...await collect(path))
+      files.push(...await collect(path));
     } else if (entry.isFile() && /\.(?:vue|[cm]?[jt]sx?)$/.test(entry.name) && !/\.d\.[cm]?ts$/.test(entry.name)) {
-      files.push(path)
+      files.push(path);
     }
   }
-  return files.sort()
+  return files.sort();
 }
 
+/**
+ * Extract translations from package sources and write the generated input.
+ *
+ * @param {string} destination - Path to write the extracted translations.
+ * @param {string|undefined} excludeFile - Optional file listing excluded sources.
+ */
 async function extractStrings(destination, excludeFile) {
-  const excluded = new Set()
+  const excluded = new Set();
   if (excludeFile !== undefined) {
-    const contents = await readFile(excludeFile, 'utf8')
+    const contents = await readFile(excludeFile, 'utf8');
     for (const entry of contents.split(/\r?\n/)) {
-      const path = entry.trim()
+      const path = entry.trim();
       if (!path || path.startsWith('#')) {
-        continue
+        continue;
       }
-      const start = path.indexOf(`${packageName}/lib/`)
+      const start = path.indexOf(`${packageName}/lib/`);
       if (start === 0 || (start > 0 && path[start - 1] === '/')) {
-        excluded.add(path.slice(start + packageName.length + 1))
+        excluded.add(path.slice(start + packageName.length + 1));
       }
     }
   }
-  const entries = new Map()
+  const entries = new Map();
   for (const file of await collect(join(packageRoot, 'lib'))) {
     if (resolve(file) === resolve(destination)) {
-      throw new Error('The destination must not overwrite a package source file')
+      throw new Error('The destination must not overwrite a package source file');
     }
-    const source = relative(packageRoot, file).split('\\').join('/')
+    const source = relative(packageRoot, file).split('\\').join('/');
     if (excluded.has(source)) {
-      continue
+      continue;
     }
-    const code = await readFile(file, 'utf8')
+    const code = await readFile(file, 'utf8');
     try {
       if (file.endsWith('.vue')) {
-        const { descriptor, errors } = parseVue(code, { filename: file })
+        const { descriptor, errors } = parseVue(code, { filename: file });
         if (errors.length) {
-          throw new Error(errors.map(String).join('\n'))
+          throw new Error(errors.map(String).join('\n'));
         }
         if (descriptor.script?.src || descriptor.scriptSetup?.src || descriptor.template?.src) {
-          throw new Error('External script and template blocks are not supported')
+          throw new Error('External script and template blocks are not supported');
         }
         if (descriptor.template?.lang && descriptor.template.lang !== 'html') {
-          throw new Error('Only HTML templates are supported')
+          throw new Error('Only HTML templates are supported');
         }
         for (const script of [descriptor.script, descriptor.scriptSetup]) {
           if (script) {
-            extract(script.content, source, entries, ['jsx', 'tsx'].includes(script.lang), script.loc.start.line - 1)
+            extract(script.content, source, entries, ['jsx', 'tsx'].includes(script.lang), script.loc.start.line - 1);
           }
         }
         if (descriptor.template) {
@@ -145,7 +193,7 @@ async function extractStrings(destination, excludeFile) {
             compilerOptions: {
               expressionPlugins: ['typescript'],
               nodeTransforms: [(node) => {
-                const expressions = [node.content, ...(node.props ?? []).map((prop) => prop.exp)]
+                const expressions = [node.content, ...(node.props ?? []).map((prop) => prop.exp)];
                 for (const expression of expressions) {
                   if (expression?.ast) {
                     extractAst(
@@ -153,54 +201,54 @@ async function extractStrings(destination, excludeFile) {
                       source,
                       entries,
                       descriptor.template.loc.start.line + expression.loc.start.line - 2,
-                    )
+                    );
                   }
                 }
               }],
             },
-          })
+          });
           if (template.errors.length) {
-            throw new Error(template.errors.map(String).join('\n'))
+            throw new Error(template.errors.map(String).join('\n'));
           }
         }
       } else {
-        extract(code, source, entries, /\.[jt]sx$/.test(file))
+        extract(code, source, entries, /\.[jt]sx$/.test(file));
       }
     } catch (error) {
-      throw new Error(`${source}: ${error.message}`, { cause: error })
+      throw new Error(`${source}: ${error.message}`, { cause: error });
     }
   }
   const output = [
     `// Generated by @rotdrop/${command}.`,
     '// Translation extraction input only: do not import or execute this file.',
     '',
-  ]
+  ];
   for (const { strings, sources } of entries.values()) {
     const sourceLocations = [...sources].flatMap(([source, lines]) => [...lines]
       .sort((a, b) => a - b)
-      .map((line) => `${packageName}/${source}:${line}`))
+      .map((line) => `${packageName}/${source}:${line}`));
     output.push(
       `// TRANSLATORS: Source: ${sourceLocations.join(', ')}; generated by ${command}.`,
       strings.length === 1
         ? `t(appName, ${JSON.stringify(strings[0])});`
         : `n(appName, ${strings.map((string) => JSON.stringify(string)).join(', ')}, 1);`,
       '',
-    )
+    );
   }
-  await writeFile(destination, output.join('\n'), 'utf8')
+  await writeFile(destination, output.join('\n'), 'utf8');
 }
 
 try {
-  const args = process.argv.slice(2)
+  const args = process.argv.slice(2);
   if (args.length === 1 && ['--help', '-h'].includes(args[0])) {
-    console.log(usage)
+    console.log(usage);
   } else if ([2, 3].includes(args.length) && args[0] === 'extract-l10n-strings'
     && args[1] !== '' && args[2] !== '') {
-    await extractStrings(resolve(args[1]), args[2])
+    await extractStrings(resolve(args[1]), args[2]);
   } else {
-    throw new Error(usage)
+    throw new Error(usage);
   }
 } catch (error) {
-  console.error(error.message)
-  process.exitCode = 1
+  console.error(error.message);
+  process.exitCode = 1;
 }

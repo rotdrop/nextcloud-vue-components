@@ -117,29 +117,43 @@ defineOptions({
 
 const props = withDefaults(
   defineProps<{
+    /** Currently selected value or values. */
     modelValue?: ValueType
-    loading?: boolean // show an loading indicator on the wrapper select
+    /** Whether to show a loading indicator on the select wrapper. */
+    loading?: boolean
+    /** Whether to disable the select and its actions. */
     disabled?: boolean
-    clearable?: boolean // clearable allows deselection of the last item
+    /** Whether the selected value can be cleared. */
+    clearable?: boolean
     /**
      * Allow selection of multiple options
      *
      * @see https://vue-select.org/api/props.html#multiple
      */
     multiple?: boolean
-    // required blocks the final submit if no value is selected
+    /** Whether a selection is required before submission. */
     required?: boolean
+    /** Whether the input label is rendered outside this component. */
     labelOutside?: boolean
+    /** Label text displayed for the select. */
     inputLabel?: string
+    /** ID associated with the select input. */
     inputId?: string
+    /** Supplementary text displayed below the select. */
     hint?: string
+    /** Tooltip content for the select wrapper. */
     tooltip?: Record<string, string>|string|boolean
+    /** Additional CSS classes for the select layout wrapper. */
     flexContainerClasses?: string[]
+    /** Additional CSS classes for layout items. */
     flexItemClasses?: string[]
-    // configure default button and action additions
+    /** Whether to show the submit button. */
     submitButton?: boolean
+    /** Whether to show the clear-selection action. */
     clearAction?: boolean
+    /** Whether to show the reset action. */
     resetAction?: boolean
+    /** Value to restore when resetting the selection. */
     resetState?: ValueType
   }>(),
   {

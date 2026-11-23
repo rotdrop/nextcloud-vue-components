@@ -50,9 +50,40 @@
 </template>
 
 <script setup lang="ts">
-import { NcTextField } from '@nextcloud/vue'
 import type { DirectiveBinding, ObjectDirective } from 'vue'
+
+import { NcTextField } from '@nextcloud/vue'
 import vTooltip from '../directives/Tooltip/index.ts'
+
+defineOptions({
+  name: 'TextFieldWithTrailingButton',
+  inheritAttrs: false,
+})
+
+const model = defineModel<string|number>({ default: '' })
+
+const props = withDefaults(defineProps<{
+  /** Action button mode displayed at the end of the text field. */
+  trailingButton?: 'none'|'submit'|'clear'
+  /** Whether to show a tooltip on the trailing button. */
+  trailingButtonTooltip?: boolean
+  /** Supplementary text displayed below the text field. */
+  hint?: string
+  /** Additional CSS classes for the text-field layout wrapper. */
+  flexContainerClasses?: string[]
+  /** Additional CSS classes for individual layout items. */
+  flexItemClasses?: string[]
+}>(), {
+  trailingButton: 'submit',
+  trailingButtonTooltip: true, // eslint-disable-line vue/no-boolean-default
+  hint: undefined,
+  flexContainerClasses: () => ['flex-justify-left', 'flex-align-start'],
+  flexItemClasses: () => ['flex-justify-left', 'flex-align-start'],
+})
+
+const emit = defineEmits([
+  'submit',
+])
 
 const tooltipButtons = new WeakMap<HTMLElement, HTMLButtonElement>()
 
@@ -84,31 +115,6 @@ const vTrailingButtonTooltip: ObjectDirective<HTMLElement, boolean> = {
     }
   },
 }
-
-defineOptions({
-  name: 'TextFieldWithTrailingButton',
-  inheritAttrs: false,
-})
-
-const model = defineModel<string|number>({ default: '' })
-
-const props = withDefaults(defineProps<{
-  trailingButton?: 'none'|'submit'|'clear'
-  trailingButtonTooltip?: boolean
-  hint?: string
-  flexContainerClasses?: string[]
-  flexItemClasses?: string[]
-}>(), {
-  trailingButton: 'submit',
-  trailingButtonTooltip: true, // eslint-disable-line vue/no-boolean-default
-  hint: undefined,
-  flexContainerClasses: () => ['flex-justify-left', 'flex-align-start'],
-  flexItemClasses: () => ['flex-justify-left', 'flex-align-start'],
-})
-
-const emit = defineEmits([
-  'submit',
-])
 
 const onTrailingButtonClick = () => {
   if (props.trailingButton === 'clear') {

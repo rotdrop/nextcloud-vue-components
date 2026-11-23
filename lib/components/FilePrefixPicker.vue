@@ -33,14 +33,14 @@
         </a>
       </div>
       <TextFieldWithSubmitButton v-if="!onlyDirName"
-                                 :model-value="pathInfo.baseName"
                                  v-tooltip="unclippedPopup(pathInfo.baseName)"
+                                 :modelValue="pathInfo.baseName"
                                  :label="placeholder"
                                  class="flex-grow"
                                  :placeholder="placeholder"
                                  :readonly="readonly === 'basename'"
                                  :disabled="disabled"
-                                 @update:model-value="updateBaseName"
+                                 @update:modelValue="updateBaseName"
                                  @submit="emit('submit', { ...pathInfo })"
       />
     </div>
@@ -74,14 +74,23 @@ defineOptions({
 
 const props = withDefaults(
   defineProps<{
+    /** Current directory and base-name values. */
     modelValue?: { baseName: string, dirName: string }
+    /** Initial base name when no model value is provided. */
     baseName?: string
+    /** Initial directory name when no model value is provided. */
     dirName?: string
+    /** Whether to select and submit a directory without a base name. */
     onlyDirName?: boolean
+    /** Supplementary text displayed below the picker. */
     hint?: string
+    /** Label and placeholder for the base-name input. */
     placeholder?: string
+    /** Set to "basename" to make the base-name input read-only. */
     readonly?: boolean|string
+    /** Whether to disable the directory picker and base-name input. */
     disabled?: boolean
+    /** Custom title for the directory picker dialog. */
     filePickerTitle?: string
   }>(),
   {

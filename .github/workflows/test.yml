@@ -2,6 +2,8 @@ name: Tests
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 permissions:
@@ -21,6 +23,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      - run: ./node_modules/.bin/eslint --max-warnings 0 lib bin/nextcloud-vue-components.mjs
       - run: npm test
       - run: npm run typecheck
       - run: npm pack --dry-run

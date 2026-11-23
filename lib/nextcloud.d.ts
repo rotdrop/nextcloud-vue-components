@@ -20,9 +20,9 @@
 declare global {
   var OC: {
     config: {
-      versionstring: string,
-    }
+      versionstring: string;
+    };
   };
 }
 
-export {}
+export {};
